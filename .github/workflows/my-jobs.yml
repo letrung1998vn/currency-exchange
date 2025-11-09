@@ -43,6 +43,7 @@ jobs:
         run: mvn -B -U test
 
   build_image:
+    needs: test
     runs-on: [self-hosted, some-label]
     steps:
       - uses: actions/checkout@v3
