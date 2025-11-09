@@ -12,8 +12,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
-          maven-version: '3.8.8'
           cache: maven
+      - name: Set up maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: '4.0.0-RC1'
       - name: Cache Maven local repository
         uses: actions/cache@v4
         with:
@@ -33,8 +36,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
-          maven-version: '3.8.8'
           cache: maven
+      - name : Set up maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: '4.0.0-RC1'
       - name: Cache Maven local repository
         uses: actions/cache@v4
         with:
