@@ -34,20 +34,20 @@ public class CurrencyController {
     }
 
     @GetMapping("/get-exchange-rate")
-    public List<CurrencyExchangeRate> exchangeRateList(@RequestParam String baseCurrency) {
-        List<CurrencyExchangeRate> res = currencyService.getExchangeRate(baseCurrency);
+    public List<CurrencyExchangeRateDto> exchangeRateList(@RequestParam String baseCurrency) {
+        List<CurrencyExchangeRateDto> res = currencyService.getExchangeRate(baseCurrency);
         return res;
     }
 
     @GetMapping("/get-exchange-rate-at-time")
-    public List<CurrencyExchangeRate> exchangeRateListAtTime(@RequestParam String baseCurrency,@RequestParam String time) {
-        List<CurrencyExchangeRate> res = currencyService.getExchangeRateAtTime(baseCurrency, time);
+    public List<CurrencyExchangeRateDto> exchangeRateListAtTime(@RequestParam String baseCurrency,@RequestParam String time) {
+        List<CurrencyExchangeRateDto> res = currencyService.getExchangeRateAtTime(baseCurrency, time);
         return res;
     }
 
     @GetMapping("/get-exchange-rate-by-base-currency-code")
-    public List<CurrencyExchangeRate> exchangeRateListByBaseCurrencyCode(@RequestParam String baseCurrency, @RequestParam String time) {
-        List<CurrencyExchangeRate> res = currencyService.getExchangeRateByBaseCurrencyCode(baseCurrency, time);
+    public List<CurrencyExchangeRateDto> exchangeRateListByBaseCurrencyCode(@RequestParam String baseCurrency, @RequestParam String time) {
+        List<CurrencyExchangeRateDto> res = currencyService.getExchangeRateByBaseCurrencyCode(baseCurrency, time);
         return res;
 
     }

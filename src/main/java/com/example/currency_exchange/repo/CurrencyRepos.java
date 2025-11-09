@@ -50,11 +50,6 @@ public interface CurrencyRepos extends JpaRepository<CurrencyExchangeRate, Long>
     @Query("DELETE FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base AND c.quoteCurrency = :quote")
     void deleteByBaseCurrencyAndQuoteCurrency(@Param("base") String baseCurrency, @Param("quote") String quoteCurrency);
 
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base AND c.quoteCurrency = :quote AND c.updateTime = :updateTime")
-    void deleteByBaseCurrencyAndQuoteCurrencyAndUpdateTime(@Param("base") String baseCurrency, @Param("quote") String quoteCurrency, @Param("updateTime") LocalDateTime updateTime);
-
     // delete by base only (no time)
     @Modifying
     @Transactional
@@ -66,9 +61,4 @@ public interface CurrencyRepos extends JpaRepository<CurrencyExchangeRate, Long>
     @Transactional
     @Query("DELETE FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base AND c.updateTime = :updateTime")
     void deleteByBaseCurrencyAndUpdateTime(@Param("base") String baseCurrency, @Param("updateTime") LocalDateTime updateTime);
-
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM CurrencyExchangeRate c WHERE c.quoteCurrency = :quote and c.updateTime = :updateTime")
-    void deleteByQuoteCurrency(@Param("quote") String quoteCurrency, @Param("updateTime") LocalDateTime updateTime);
 }

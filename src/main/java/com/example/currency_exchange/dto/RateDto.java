@@ -5,20 +5,22 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class RateDto {
-    private Float averageBid;
+    private BigDecimal averageBid;
 
-    private Float averageAsk;
+    private BigDecimal averageAsk;
 
-    private Float highBid;
+    private BigDecimal highBid;
 
-    private Float highAsk;
+    private BigDecimal highAsk;
 
-    private Float lowBid;
+    private BigDecimal lowBid;
 
-    private Float lowAsk;
+    private BigDecimal lowAsk;
 }

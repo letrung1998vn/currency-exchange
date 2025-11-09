@@ -6,14 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-
-import static java.lang.Float.parseFloat;
 
 @Service
 public class CurrencySyncService {
@@ -34,12 +33,12 @@ public class CurrencySyncService {
                 startDate, endDate);
         for (CurrencyExchangeRateDto rateDto : syncCurrencyRate) {
             RateDto rate = RateDto.builder()
-                    .averageBid(parseFloat(rateDto.getAverageBid()))
-                    .averageAsk(parseFloat(rateDto.getAverageAsk()))
-                    .highBid(parseFloat(rateDto.getHighBid()))
-                    .highAsk(parseFloat(rateDto.getHighAsk()))
-                    .lowBid(parseFloat(rateDto.getLowBid()))
-                    .lowAsk(parseFloat(rateDto.getLowAsk()))
+                    .averageBid(new BigDecimal(rateDto.getAverageBid()))
+                    .averageAsk(new BigDecimal(rateDto.getAverageAsk()))
+                    .highBid(new BigDecimal(rateDto.getHighBid()))
+                    .highAsk(new BigDecimal(rateDto.getHighAsk()))
+                    .lowBid(new BigDecimal(rateDto.getLowBid()))
+                    .lowAsk(new BigDecimal(rateDto.getLowAsk()))
                     .build();
             DateTimeFormatter OUT_FMT =
                     DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").withZone(ZoneId.of("UTC"));
@@ -54,12 +53,12 @@ public class CurrencySyncService {
                 startDate, endDate);
         for (CurrencyExchangeRateDto rateDto : syncCurrencyRate) {
             RateDto rate = RateDto.builder()
-                    .averageBid(parseFloat(rateDto.getAverageBid()))
-                    .averageAsk(parseFloat(rateDto.getAverageAsk()))
-                    .highBid(parseFloat(rateDto.getHighBid()))
-                    .highAsk(parseFloat(rateDto.getHighAsk()))
-                    .lowBid(parseFloat(rateDto.getLowBid()))
-                    .lowAsk(parseFloat(rateDto.getLowAsk()))
+                    .averageBid(new BigDecimal(rateDto.getAverageBid()))
+                    .averageAsk(new BigDecimal(rateDto.getAverageAsk()))
+                    .highBid(new BigDecimal(rateDto.getHighBid()))
+                    .highAsk(new BigDecimal(rateDto.getHighAsk()))
+                    .lowBid(new BigDecimal(rateDto.getLowBid()))
+                    .lowAsk(new BigDecimal(rateDto.getLowAsk()))
                     .build();
 
             DateTimeFormatter OUT_FMT =
@@ -69,18 +68,6 @@ public class CurrencySyncService {
             // DTO closeTime is a string (ISO); CurrencyService expects update_time as String
             currencyService.addExchangeRate(rateDto.getBaseCurrency(),
                     OUT_FMT.format(instant), rate);
-        }
-    }
-
-    private Double parseDouble(String s) {
-        if (s == null) {
-            return null;
-        }
-        try {
-            return Double.valueOf(s);
-        }
-        catch (NumberFormatException e) {
-            return null;
         }
     }
 }

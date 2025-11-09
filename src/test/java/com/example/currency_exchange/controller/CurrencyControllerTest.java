@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -38,7 +39,7 @@ class CurrencyControllerTest {
     @Test
     void addExchangeRate_delegatesToService() {
         RateDto rate = new RateDto();
-        rate.setAverageBid(1.23f);
+        rate.setAverageBid(new BigDecimal(1.23));
 
         controller.addExchangeRate("EUR", "2025/11/01 00:00:00", rate);
 
@@ -47,14 +48,14 @@ class CurrencyControllerTest {
 
     @Test
     void exchangeRateList_returnsServiceResult() {
-        CurrencyExchangeRate e = new CurrencyExchangeRate();
+        CurrencyExchangeRateDto e = new CurrencyExchangeRateDto();
         e.setBaseCurrency("EUR");
         e.setQuoteCurrency("USD");
-        List<CurrencyExchangeRate> expected = Collections.singletonList(e);
+        List<CurrencyExchangeRateDto> expected = Collections.singletonList(e);
 
         when(currencyService.getExchangeRate("EUR")).thenReturn(expected);
 
-        List<CurrencyExchangeRate> actual = controller.exchangeRateList("EUR");
+        List<CurrencyExchangeRateDto> actual = controller.exchangeRateList("EUR");
 
         assertSame(expected, actual);
         verify(currencyService, times(1)).getExchangeRate("EUR");
@@ -62,14 +63,14 @@ class CurrencyControllerTest {
 
     @Test
     void exchangeRateListAtTime_returnsServiceResult() {
-        CurrencyExchangeRate e = new CurrencyExchangeRate();
+        CurrencyExchangeRateDto e = new CurrencyExchangeRateDto();
         e.setBaseCurrency("EUR");
         e.setQuoteCurrency("USD");
-        List<CurrencyExchangeRate> expected = Collections.singletonList(e);
+        List<CurrencyExchangeRateDto> expected = Collections.singletonList(e);
 
         when(currencyService.getExchangeRateAtTime("EUR", "2025/11/01 00:00:00")).thenReturn(expected);
 
-        List<CurrencyExchangeRate> actual = controller.exchangeRateListAtTime("EUR", "2025/11/01 00:00:00");
+        List<CurrencyExchangeRateDto> actual = controller.exchangeRateListAtTime("EUR", "2025/11/01 00:00:00");
 
         assertEquals(1, actual.size());
         // expected baseCurrency is EUR and quoteCurrency is USD as set above
@@ -80,13 +81,13 @@ class CurrencyControllerTest {
 
     @Test
     void exchangeRateListByBaseCurrencyCode_returnsServiceResult() {
-        CurrencyExchangeRate e = new CurrencyExchangeRate();
+        CurrencyExchangeRateDto e = new CurrencyExchangeRateDto();
         e.setBaseCurrency("USD");
-        List<CurrencyExchangeRate> expected = Collections.singletonList(e);
+        List<CurrencyExchangeRateDto> expected = Collections.singletonList(e);
 
         when(currencyService.getExchangeRateByBaseCurrencyCode("USD", "2025/11/01 00:00:00")).thenReturn(expected);
 
-        List<CurrencyExchangeRate> actual = controller.exchangeRateListByBaseCurrencyCode("USD", "2025/11/01 00:00:00");
+        List<CurrencyExchangeRateDto> actual = controller.exchangeRateListByBaseCurrencyCode("USD", "2025/11/01 00:00:00");
 
         assertFalse(actual.isEmpty());
         assertEquals("USD", actual.get(0).getBaseCurrency());
@@ -96,7 +97,7 @@ class CurrencyControllerTest {
     @Test
     void modifyExchangeRate_returnsUpdatedEntity() {
         RateDto rate = new RateDto();
-        rate.setAverageBid(2.5f);
+        rate.setAverageBid(new BigDecimal(2.5));
         CurrencyExchangeRate updated = new CurrencyExchangeRate();
         updated.setBaseCurrency("USD");
         updated.setQuoteCurrency("JPY");

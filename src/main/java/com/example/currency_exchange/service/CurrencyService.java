@@ -1,7 +1,9 @@
 package com.example.currency_exchange.service;
 
+import com.example.currency_exchange.dto.CurrencyExchangeRateDto;
 import com.example.currency_exchange.dto.RateDto;
 import com.example.currency_exchange.entity.CurrencyExchangeRate;
+import com.example.currency_exchange.mapper.CurrencyMapper;
 import com.example.currency_exchange.repo.CurrencyRepos;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -19,15 +22,23 @@ public class CurrencyService {
     CurrencyRepos currencyRepos;
     @Autowired
     MessageSource messageSource;
+    @Autowired
+    CurrencyMapper mapper;
 
     public void addExchangeRate(String baseCurrency, String update_time, RateDto rate) {
-        List<CurrencyExchangeRate> existingRates = getExchangeRateAtTime(
+        List<CurrencyExchangeRateDto> existingRates = getExchangeRateAtTime(
                 baseCurrency, update_time);
         if (existingRates != null && !existingRates.isEmpty()) {
             throw new UnsupportedOperationException(
                     messageSource.getMessage("insertMutlipleError", null, null));
         }
 
+        CurrencyExchangeRate rateEntity = getCurrencyExchangeRate(baseCurrency,
+                update_time, rate);
+        currencyRepos.save(rateEntity);
+    }
+
+    private static CurrencyExchangeRate getCurrencyExchangeRate(String baseCurrency, String update_time, RateDto rate) {
         CurrencyExchangeRate rateEntity = new CurrencyExchangeRate();
         rateEntity.setBaseCurrency(baseCurrency);
         rateEntity.setQuoteCurrency("USD");
@@ -38,35 +49,47 @@ public class CurrencyService {
         rateEntity.setLowAsk(rate.getLowAsk());
         rateEntity.setAverageAsk(rate.getAverageAsk());
         rateEntity.setAverageBid(rate.getAverageBid());
-        currencyRepos.save(rateEntity);
+        return rateEntity;
     }
 
-    public List<CurrencyExchangeRate> getExchangeRate(String baseCurrency) {
+    public List<CurrencyExchangeRateDto> getExchangeRate(String baseCurrency) {
         List<CurrencyExchangeRate> result = currencyRepos.findByBaseCurrencyOrderByBaseCurrency(
                 baseCurrency);
         if (result == null || result.isEmpty()) {
             throw new UnsupportedOperationException(
                     messageSource.getMessage("currencyCodeNotFound", null, null));
         }
-        return result;
+        List<CurrencyExchangeRateDto> currencyExchangeRateDtos = new ArrayList<>();
+        for (CurrencyExchangeRate exchangeRate : result) {
+            currencyExchangeRateDtos.add(mapper.toDto(exchangeRate));
+        }
+        return currencyExchangeRateDtos;
     }
 
-    public List<CurrencyExchangeRate> getExchangeRateAtTime(String baseCurrency, String time) {
+    public List<CurrencyExchangeRateDto> getExchangeRateAtTime(String baseCurrency, String time) {
         LocalDateTime parsed = LocalDateTime.parse(time, FMT);
         List<CurrencyExchangeRate> result
                 = currencyRepos.findByBaseCurrencyAndUpdateTimeOrderByBaseCurrency(
                 baseCurrency, parsed);
-        return result;
+        List<CurrencyExchangeRateDto> currencyExchangeRateDtos = new ArrayList<>();
+        for (CurrencyExchangeRate exchangeRate : result) {
+            currencyExchangeRateDtos.add(mapper.toDto(exchangeRate));
+        }
+        return currencyExchangeRateDtos;
     }
 
-    public List<CurrencyExchangeRate> getExchangeRateByBaseCurrencyCode(String baseCurrency, String time) {
+    public List<CurrencyExchangeRateDto> getExchangeRateByBaseCurrencyCode(String baseCurrency, String time) {
         LocalDateTime updateTime = LocalDateTime.parse(time, FMT);
         List<CurrencyExchangeRate> result = currencyRepos.findByBaseCurrency(baseCurrency, updateTime);
         if (result == null || result.isEmpty()) {
             throw new UnsupportedOperationException(
                     messageSource.getMessage("currencyCodeNotFound", null, null));
         }
-        return result;
+        List<CurrencyExchangeRateDto> currencyExchangeRateDtos = new ArrayList<>();
+        for (CurrencyExchangeRate exchangeRate : result) {
+            currencyExchangeRateDtos.add(mapper.toDto(exchangeRate));
+        }
+        return currencyExchangeRateDtos;
     }
 
     public CurrencyExchangeRate updateExchangeRate(String baseCurrency, String update_time, RateDto rate) {

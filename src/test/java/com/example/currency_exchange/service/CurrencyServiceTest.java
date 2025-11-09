@@ -2,6 +2,7 @@ package com.example.currency_exchange.service;
 
 import com.example.currency_exchange.dto.RateDto;
 import com.example.currency_exchange.entity.CurrencyExchangeRate;
+import com.example.currency_exchange.mapper.CurrencyMapper;
 import com.example.currency_exchange.repo.CurrencyRepos;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.context.MessageSource;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -21,6 +23,8 @@ import static org.mockito.Mockito.*;
 class CurrencyServiceTest {
 
     DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+    @Mock
+    CurrencyMapper mapper;
     @Mock
     private CurrencyRepos currencyRepos;
     @Mock
@@ -36,12 +40,12 @@ class CurrencyServiceTest {
     @Test
     void addExchangeRate_savesEntityWithValues() {
         RateDto rate = new RateDto();
-        rate.setHighBid(1.1F);
-        rate.setLowBid(0.9F);
-        rate.setHighAsk(1.2F);
-        rate.setLowAsk(0.8F);
-        rate.setAverageAsk(1.15F);
-        rate.setAverageBid(0.95F);
+        rate.setHighBid(new BigDecimal(1.1));
+        rate.setLowBid(new BigDecimal(0.9));
+        rate.setHighAsk(new BigDecimal(1.2));
+        rate.setLowAsk(new BigDecimal(0.8));
+        rate.setAverageAsk(new BigDecimal(1.15));
+        rate.setAverageBid(new BigDecimal(0.95));
 
         // ensure getExchangeRateAtTime will return empty list to allow save path
         when(currencyRepos.findByBaseCurrencyAndUpdateTimeOrderByBaseCurrency(anyString(),
@@ -102,12 +106,12 @@ class CurrencyServiceTest {
     @Test
     void updateExchangeRate_updatesAndSaves() {
         RateDto rate = new RateDto();
-        rate.setHighBid(2.0F);
-        rate.setLowBid(1.0F);
-        rate.setHighAsk(2.2F);
-        rate.setLowAsk(0.8F);
-        rate.setAverageAsk(2.1F);
-        rate.setAverageBid(1.1F);
+        rate.setHighBid(new BigDecimal(2.0));
+        rate.setLowBid(new BigDecimal(1.0));
+        rate.setHighAsk(new BigDecimal(2.2));
+        rate.setLowAsk(new BigDecimal(0.8));
+        rate.setAverageAsk(new BigDecimal(2.1));
+        rate.setAverageBid(new BigDecimal(1.1));
 
         CurrencyExchangeRate existing = new CurrencyExchangeRate();
         existing.setBaseCurrency("X");

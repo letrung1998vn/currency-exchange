@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,12 +24,12 @@ class CurrencyReposTest {
         e.setBaseCurrency(base);
         e.setQuoteCurrency(quote);
         e.setUpdateTime(t);
-        e.setAverageBid(avgBid);
-        e.setAverageAsk(avgBid + 0.1f);
-        e.setHighBid(avgBid + 0.2f);
-        e.setHighAsk(avgBid + 0.3f);
-        e.setLowBid(avgBid - 0.2f);
-        e.setLowAsk(avgBid - 0.1f);
+        e.setAverageBid(new BigDecimal(avgBid));
+        e.setAverageAsk(new BigDecimal(avgBid + 0.1f));
+        e.setHighBid(new BigDecimal(avgBid + 0.2f));
+        e.setHighAsk(new BigDecimal(avgBid + 0.3f));
+        e.setLowBid(new BigDecimal(avgBid - 0.2f));
+        e.setLowAsk(new BigDecimal(avgBid - 0.1f));
         return e;
     }
 
@@ -82,23 +83,12 @@ class CurrencyReposTest {
         CurrencyExchangeRate e1 = repo.save(create("DEL", "X1", t, 1.0f));
         CurrencyExchangeRate e2 = repo.save(create("DEL", "X2", t.plusMinutes(1), 1.1f));
 
-        // delete by base+quote
         repo.deleteByBaseCurrencyAndQuoteCurrency("DEL", "X1");
         assertThat(repo.findByBaseCurrencyAndQuoteCurrencyAndUpdateTime("DEL", "X1", t)).isNull();
 
-        // delete by base+quote+time on e2
-        repo.deleteByBaseCurrencyAndQuoteCurrencyAndUpdateTime("DEL", "X2", t.plusMinutes(1));
-        List<CurrencyExchangeRate> remaining = repo.findByBaseCurrencyAndQuoteCurrencyOrderByBaseCurrency("DEL", "X2");
-        assertThat(remaining).isEmpty();
-
-        // save again and delete by base+time
         CurrencyExchangeRate e3 = repo.save(create("BAS", "Q", t, 2.0f));
         repo.deleteByBaseCurrencyAndUpdateTime("BAS", t);
         assertThat(repo.findByBaseCurrency("BAS", t)).isEmpty();
 
-        // delete by quote
-        CurrencyExchangeRate e4 = repo.save(create("SOM", "QQ", t, 3.0f));
-        repo.deleteByQuoteCurrency("QQ", t);
-        assertThat(repo.findByQuoteCurrency("QQ", t)).isEmpty();
     }
 }

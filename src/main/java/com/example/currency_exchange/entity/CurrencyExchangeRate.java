@@ -3,6 +3,7 @@ package com.example.currency_exchange.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,21 +25,21 @@ public class CurrencyExchangeRate {
     private LocalDateTime updateTime;
 
     @Column(name = "average_bid")
-    private Float averageBid;
+    private BigDecimal averageBid;
 
     @Column(name = "average_ask")
-    private Float averageAsk;
+    private BigDecimal averageAsk;
 
     @Column(name = "high_bid")
-    private Float highBid;
+    private BigDecimal highBid;
 
     @Column(name = "high_ask")
-    private Float highAsk;
+    private BigDecimal highAsk;
 
     @Column(name = "low_bid")
-    private Float lowBid;
+    private BigDecimal lowBid;
 
     @Column(name = "low_ask")
-    private Float lowAsk;
+    private BigDecimal lowAsk;
 
 }
