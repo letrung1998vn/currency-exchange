@@ -14,17 +14,15 @@ import java.util.List;
 @Service
 public class CurrencyService {
 
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     @Autowired
     CurrencyRepos currencyRepos;
-
     @Autowired
     MessageSource messageSource;
 
-    public void addExchangeRate(String baseCurrency, String quoteCurrency, String update_time, RateDto rate) {
-        DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        LocalDateTime formatedDatetime = LocalDateTime.parse(update_time, FMT);
+    public void addExchangeRate(String baseCurrency, String update_time, RateDto rate) {
         List<CurrencyExchangeRate> existingRates = getExchangeRateAtTime(
-                baseCurrency, quoteCurrency, formatedDatetime.toString());
+                baseCurrency, update_time);
         if (existingRates != null && !existingRates.isEmpty()) {
             throw new UnsupportedOperationException(
                     messageSource.getMessage("insertMutlipleError", null, null));
@@ -32,8 +30,8 @@ public class CurrencyService {
 
         CurrencyExchangeRate rateEntity = new CurrencyExchangeRate();
         rateEntity.setBaseCurrency(baseCurrency);
-        rateEntity.setQuoteCurrency(quoteCurrency);
-        rateEntity.setUpdateTime(formatedDatetime);
+        rateEntity.setQuoteCurrency("USD");
+        rateEntity.setUpdateTime(LocalDateTime.parse(update_time, FMT));
         rateEntity.setHighBid(rate.getHighBid());
         rateEntity.setLowBid(rate.getLowBid());
         rateEntity.setHighAsk(rate.getHighAsk());
@@ -43,9 +41,9 @@ public class CurrencyService {
         currencyRepos.save(rateEntity);
     }
 
-    public List<CurrencyExchangeRate> getExchangeRate(String baseCurrency, String quoteCurrency) {
-        List<CurrencyExchangeRate> result = currencyRepos.findByBaseCurrencyAndQuoteCurrencyOrderByBaseCurrency(
-                baseCurrency, quoteCurrency);
+    public List<CurrencyExchangeRate> getExchangeRate(String baseCurrency) {
+        List<CurrencyExchangeRate> result = currencyRepos.findByBaseCurrencyOrderByBaseCurrency(
+                baseCurrency);
         if (result == null || result.isEmpty()) {
             throw new UnsupportedOperationException(
                     messageSource.getMessage("currencyCodeNotFound", null, null));
@@ -53,20 +51,15 @@ public class CurrencyService {
         return result;
     }
 
-    public List<CurrencyExchangeRate> getExchangeRateAtTime(String baseCurrency, String quoteCurrency, String time) {
-        LocalDateTime parsed = LocalDateTime.parse(time);
+    public List<CurrencyExchangeRate> getExchangeRateAtTime(String baseCurrency, String time) {
+        LocalDateTime parsed = LocalDateTime.parse(time, FMT);
         List<CurrencyExchangeRate> result
-                = currencyRepos.findByBaseCurrencyAndQuoteCurrencyAndUpdateTimeOrderByBaseCurrency(
-                baseCurrency, quoteCurrency, parsed);
-        if (result == null || result.isEmpty()) {
-            throw new UnsupportedOperationException(
-                    messageSource.getMessage("currencyCopeWithTimeNotFound", null, null));
-        }
+                = currencyRepos.findByBaseCurrencyAndUpdateTimeOrderByBaseCurrency(
+                baseCurrency, parsed);
         return result;
     }
 
     public List<CurrencyExchangeRate> getExchangeRateByBaseCurrencyCode(String baseCurrency, String time) {
-        DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDateTime updateTime = LocalDateTime.parse(time, FMT);
         List<CurrencyExchangeRate> result = currencyRepos.findByBaseCurrency(baseCurrency, updateTime);
         if (result == null || result.isEmpty()) {
@@ -76,28 +69,13 @@ public class CurrencyService {
         return result;
     }
 
-    public List<CurrencyExchangeRate> getExchangeRateByQuoteCurrencyCode(String quoteCurrency, String time) {
-        DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        LocalDateTime updateTime = LocalDateTime.parse(time, FMT);
-        List<CurrencyExchangeRate> result = currencyRepos.findByQuoteCurrency(quoteCurrency, updateTime);
-        if (result == null || result.isEmpty()) {
-            throw new UnsupportedOperationException(
-                    messageSource.getMessage("currencyCodeNotFound", null, null));
-        }
-        return result;
-    }
-
-    public CurrencyExchangeRate updateExchangeRate(String baseCurrency, String quoteCurrency, String update_time, RateDto rate) {
-        DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        LocalDateTime formatedDatetime = LocalDateTime.parse(update_time, FMT);
-        List<CurrencyExchangeRate> existingRates = getExchangeRateAtTime(
-                baseCurrency, quoteCurrency, formatedDatetime.toString());
-        if (existingRates != null && !existingRates.isEmpty()) {
+    public CurrencyExchangeRate updateExchangeRate(String baseCurrency, String update_time, RateDto rate) {
+        CurrencyExchangeRate rateEntity = currencyRepos.findByBaseCurrencyAndUpdateTime(baseCurrency,
+                LocalDateTime.parse(update_time, FMT));
+        if (rateEntity == null) {
             throw new UnsupportedOperationException(
                     messageSource.getMessage("updateCurrencyExchangeNotFound", null, null));
         }
-        CurrencyExchangeRate rateEntity = currencyRepos.findByBaseCurrencyAndQuoteCurrencyAndUpdateTime(baseCurrency,
-                quoteCurrency, LocalDateTime.parse(update_time));
         rateEntity.setHighBid(rate.getHighBid());
         rateEntity.setLowBid(rate.getLowBid());
         rateEntity.setHighAsk(rate.getHighAsk());
@@ -107,21 +85,13 @@ public class CurrencyService {
         return currencyRepos.save(rateEntity);
     }
 
-    public void deleteExchangeRate(String baseCurrency, String quoteCurrency) {
-        currencyRepos.deleteByBaseCurrencyAndQuoteCurrency(baseCurrency, quoteCurrency);
+    public void deleteExchangeRate(String baseCurrency) {
+        currencyRepos.deleteByBaseCurrency(baseCurrency);
     }
 
-    public void deleteExchangeRateAtTime(String baseCurrency, String quoteCurrency, String update_time) {
-        currencyRepos.deleteByBaseCurrencyAndQuoteCurrencyAndUpdateTime(baseCurrency, quoteCurrency,
-                LocalDateTime.parse(update_time));
-    }
-
-    public void deleteExchangeRateByBaseCurrencyCode(String baseCurrency, String update_time) {
-        currencyRepos.deleteByBaseCurrency(baseCurrency, LocalDateTime.parse(update_time));
-    }
-
-    public void deleteExchangeRateByQuoteCurrencyCode(String quoteCurrency, String update_time) {
-        currencyRepos.deleteByQuoteCurrency(quoteCurrency, LocalDateTime.parse(update_time));
+    public void deleteExchangeRateAtTime(String baseCurrency, String update_time) {
+        currencyRepos.deleteByBaseCurrencyAndUpdateTime(baseCurrency,
+                LocalDateTime.parse(update_time, FMT));
     }
 
 }

@@ -9,8 +9,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.context.MessageSource;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,9 +20,11 @@ import static org.mockito.Mockito.*;
 
 class CurrencyServiceTest {
 
+    DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     @Mock
     private CurrencyRepos currencyRepos;
-
+    @Mock
+    private MessageSource messageSource;
     @InjectMocks
     private CurrencyService currencyService;
 
@@ -39,7 +43,12 @@ class CurrencyServiceTest {
         rate.setAverageAsk(1.15F);
         rate.setAverageBid(0.95F);
 
-        currencyService.addExchangeRate("EUR", "USD", "2023-01-01T10:15:30", rate);
+        // ensure getExchangeRateAtTime will return empty list to allow save path
+        when(currencyRepos.findByBaseCurrencyAndUpdateTimeOrderByBaseCurrency(anyString(),
+                any(LocalDateTime.class)))
+                .thenReturn(List.of());
+
+        currencyService.addExchangeRate("EUR", "2023/01/01 10:15:30", rate);
 
         ArgumentCaptor<CurrencyExchangeRate> captor = ArgumentCaptor.forClass(CurrencyExchangeRate.class);
         verify(currencyRepos, times(1)).save(captor.capture());
@@ -47,57 +56,47 @@ class CurrencyServiceTest {
         CurrencyExchangeRate saved = captor.getValue();
         assertThat(saved.getBaseCurrency()).isEqualTo("EUR");
         assertThat(saved.getQuoteCurrency()).isEqualTo("USD");
-        assertThat(saved.getUpdateTime()).isEqualTo(LocalDateTime.parse("2023-01-01T10:15:30"));
-        assertThat(saved.getHighBid()).isEqualTo(1.1);
-        assertThat(saved.getLowBid()).isEqualTo(0.9);
-        assertThat(saved.getHighAsk()).isEqualTo(1.2);
-        assertThat(saved.getLowAsk()).isEqualTo(0.8);
-        assertThat(saved.getAverageAsk()).isEqualTo(1.15);
-        assertThat(saved.getAverageBid()).isEqualTo(0.95);
+        assertThat(saved.getUpdateTime()).isEqualTo(LocalDateTime.parse("2023/01/01 10:15:30", FMT));
+        assertThat(saved.getHighBid()).isEqualTo(1.1f);
+        assertThat(saved.getLowBid()).isEqualTo(0.9f);
+        assertThat(saved.getHighAsk()).isEqualTo(1.2f);
+        assertThat(saved.getLowAsk()).isEqualTo(0.8f);
+        assertThat(saved.getAverageAsk()).isEqualTo(1.15f);
+        assertThat(saved.getAverageBid()).isEqualTo(0.95f);
     }
 
     @Test
     void getExchangeRate_delegatesToRepo() {
-        when(currencyRepos.findByBaseCurrencyAndQuoteCurrencyOrderByBaseCurrency("A", "B"))
+        when(currencyRepos.findByBaseCurrencyOrderByBaseCurrency("A"))
                 .thenReturn(List.of(new CurrencyExchangeRate()));
 
-        var res = currencyService.getExchangeRate("A", "B");
+        var res = currencyService.getExchangeRate("A");
         assertThat(res).hasSize(1);
-        verify(currencyRepos).findByBaseCurrencyAndQuoteCurrencyOrderByBaseCurrency("A", "B");
+        verify(currencyRepos).findByBaseCurrencyOrderByBaseCurrency("A");
     }
 
     @Test
     void getExchangeRateAtTime_delegatesToRepo() {
         // use a valid LocalDateTime string and mock the JPQL-based repository method
-        String timeStr = "2023-01-01T00:00:00";
-        when(currencyRepos.findByBaseCurrencyAndQuoteCurrencyAndUpdateTimeOrderByBaseCurrency("A", "B",
-                LocalDateTime.parse(timeStr)))
+        String timeStr = "2023/01/01 00:00:00";
+        when(currencyRepos.findByBaseCurrencyAndUpdateTimeOrderByBaseCurrency("EUR",
+                LocalDateTime.parse(timeStr, FMT)))
                 .thenReturn(List.of(new CurrencyExchangeRate()));
 
-        var res = currencyService.getExchangeRateAtTime("A", "B", timeStr);
+        var res = currencyService.getExchangeRateAtTime("EUR", timeStr);
         assertThat(res).hasSize(1);
-        verify(currencyRepos).findByBaseCurrencyAndQuoteCurrencyAndUpdateTimeOrderByBaseCurrency("A",
-                "B", LocalDateTime.parse(timeStr));
+        verify(currencyRepos).findByBaseCurrencyAndUpdateTimeOrderByBaseCurrency("EUR",
+                LocalDateTime.parse(timeStr, FMT));
     }
 
     @Test
     void getExchangeRateByBaseCurrencyCode_delegatesToRepo() {
-        String timeStr = "2023-01-01T00:00:00";
-        when(currencyRepos.findByBaseCurrency("A", LocalDateTime.parse(timeStr))).thenReturn(
+        String timeStr = "2023/01/01 00:00:00";
+        when(currencyRepos.findByBaseCurrency("EUR", LocalDateTime.parse(timeStr, FMT))).thenReturn(
                 List.of(new CurrencyExchangeRate()));
-        var res = currencyService.getExchangeRateByBaseCurrencyCode("A", timeStr);
+        var res = currencyService.getExchangeRateByBaseCurrencyCode("EUR", timeStr);
         assertThat(res).hasSize(1);
-        verify(currencyRepos).findByBaseCurrency("A", LocalDateTime.parse(timeStr));
-    }
-
-    @Test
-    void getExchangeRateByQuoteCurrencyCode_delegatesToRepo() {
-        String timeStr = "2023-01-01T00:00:00";
-        when(currencyRepos.findByQuoteCurrency("B", LocalDateTime.parse(timeStr))).thenReturn(
-                List.of(new CurrencyExchangeRate()));
-        var res = currencyService.getExchangeRateByQuoteCurrencyCode("B", timeStr);
-        assertThat(res).hasSize(1);
-        verify(currencyRepos).findByQuoteCurrency("B", LocalDateTime.parse(timeStr));
+        verify(currencyRepos).findByBaseCurrency("EUR", LocalDateTime.parse(timeStr, FMT));
     }
 
     @Test
@@ -113,50 +112,38 @@ class CurrencyServiceTest {
         CurrencyExchangeRate existing = new CurrencyExchangeRate();
         existing.setBaseCurrency("X");
         existing.setQuoteCurrency("Y");
-        existing.setUpdateTime(LocalDateTime.parse("2023-01-01T00:00:00"));
+        existing.setUpdateTime(LocalDateTime.parse("2023/01/01 00:00:00", FMT));
 
-        when(currencyRepos.findByBaseCurrencyAndQuoteCurrencyAndUpdateTime("X", "Y",
-                LocalDateTime.parse("2023-01-01T00:00:00")))
+        when(currencyRepos.findByBaseCurrencyAndUpdateTime("X",
+                LocalDateTime.parse("2023/01/01 00:00:00", FMT)))
                 .thenReturn(existing);
         when(currencyRepos.save(existing)).thenReturn(existing);
 
-        var res = currencyService.updateExchangeRate("X", "Y", "2023-01-01T00:00:00", rate);
+        var res = currencyService.updateExchangeRate("X", "2023/01/01 00:00:00", rate);
 
-        assertThat(res.getHighBid()).isEqualTo(2.0);
-        assertThat(res.getLowBid()).isEqualTo(1.0);
-        assertThat(res.getHighAsk()).isEqualTo(2.2);
-        assertThat(res.getLowAsk()).isEqualTo(0.8);
-        assertThat(res.getAverageAsk()).isEqualTo(2.1);
-        assertThat(res.getAverageBid()).isEqualTo(1.1);
+        assertThat(res.getHighBid()).isEqualTo(2.0f);
+        assertThat(res.getLowBid()).isEqualTo(1.0f);
+        assertThat(res.getHighAsk()).isEqualTo(2.2f);
+        assertThat(res.getLowAsk()).isEqualTo(0.8f);
+        assertThat(res.getAverageAsk()).isEqualTo(2.1f);
+        assertThat(res.getAverageBid()).isEqualTo(1.1f);
 
-        verify(currencyRepos).findByBaseCurrencyAndQuoteCurrencyAndUpdateTime("X", "Y",
-                LocalDateTime.parse("2023-01-01T00:00:00"));
+        verify(currencyRepos).findByBaseCurrencyAndUpdateTime("X",
+                LocalDateTime.parse("2023/01/01 00:00:00", FMT));
         verify(currencyRepos).save(existing);
     }
 
     // Delete method tests
     @Test
     void deleteExchangeRate_delegatesToRepo() {
-        currencyService.deleteExchangeRate("A", "B");
-        verify(currencyRepos).deleteByBaseCurrencyAndQuoteCurrency("A", "B");
+        currencyService.deleteExchangeRate("EUR");
+        verify(currencyRepos).deleteByBaseCurrency("EUR");
     }
 
     @Test
     void deleteExchangeRateAtTime_delegatesToRepo() {
-        currencyService.deleteExchangeRateAtTime("X", "Y", "2023-01-02T12:00:00");
-        verify(currencyRepos).deleteByBaseCurrencyAndQuoteCurrencyAndUpdateTime("X", "Y",
-                LocalDateTime.parse("2023-01-02T12:00:00"));
-    }
-
-    @Test
-    void deleteExchangeRateByBaseCurrencyCode_delegatesToRepo() {
-        currencyService.deleteExchangeRateByBaseCurrencyCode("BASE", "2023-01-02T12:00:00");
-        verify(currencyRepos).deleteByBaseCurrency("BASE", LocalDateTime.parse("2023-01-02T12:00:00"));
-    }
-
-    @Test
-    void deleteExchangeRateByQuoteCurrencyCode_delegatesToRepo() {
-        currencyService.deleteExchangeRateByQuoteCurrencyCode("QUOTE", "2023-01-02T12:00:00");
-        verify(currencyRepos).deleteByQuoteCurrency("QUOTE", LocalDateTime.parse("2023-01-02T12:00:00"));
+        currencyService.deleteExchangeRateAtTime("EUR", "2023/01/02 12:00:00");
+        verify(currencyRepos).deleteByBaseCurrencyAndUpdateTime("EUR",
+                LocalDateTime.parse("2023/01/02 12:00:00", FMT));
     }
 }

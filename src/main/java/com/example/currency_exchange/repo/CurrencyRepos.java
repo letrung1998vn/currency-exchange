@@ -21,6 +21,17 @@ public interface CurrencyRepos extends JpaRepository<CurrencyExchangeRate, Long>
     CurrencyExchangeRate findByBaseCurrencyAndQuoteCurrencyAndUpdateTime(@Param("base") String baseCurrency, @Param(
             "quote") String quoteCurrency, @Param("updateTime") LocalDateTime updateTime);
 
+    // --- methods expected by CurrencyService ---
+    @Query("SELECT c FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base ORDER BY c.baseCurrency")
+    List<CurrencyExchangeRate> findByBaseCurrencyOrderByBaseCurrency(@Param("base") String baseCurrency);
+
+    @Query("SELECT c FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base AND c.updateTime = :updateTime ORDER BY c.baseCurrency")
+    List<CurrencyExchangeRate> findByBaseCurrencyAndUpdateTimeOrderByBaseCurrency(@Param("base") String baseCurrency, @Param("updateTime") LocalDateTime updateTime);
+
+    @Query("SELECT c FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base AND c.updateTime = :updateTime")
+    CurrencyExchangeRate findByBaseCurrencyAndUpdateTime(@Param("base") String baseCurrency, @Param("updateTime") LocalDateTime updateTime);
+
+    // existing methods
     @Query("SELECT c FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base AND c.updateTime = :updateTime")
     List<CurrencyExchangeRate> findByBaseCurrency(@Param("base") String baseCurrency, @Param(
             "updateTime") LocalDateTime updateTime);
@@ -42,13 +53,19 @@ public interface CurrencyRepos extends JpaRepository<CurrencyExchangeRate, Long>
     @Modifying
     @Transactional
     @Query("DELETE FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base AND c.quoteCurrency = :quote AND c.updateTime = :updateTime")
-    void deleteByBaseCurrencyAndQuoteCurrencyAndUpdateTime(@Param("base") String baseCurrency, @Param(
-            "quote") String quoteCurrency, @Param("updateTime") LocalDateTime updateTime);
+    void deleteByBaseCurrencyAndQuoteCurrencyAndUpdateTime(@Param("base") String baseCurrency, @Param("quote") String quoteCurrency, @Param("updateTime") LocalDateTime updateTime);
 
+    // delete by base only (no time)
     @Modifying
     @Transactional
-    @Query("DELETE FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base and c.updateTime = :updateTime")
-    void deleteByBaseCurrency(@Param("base") String baseCurrency, @Param("updateTime") LocalDateTime updateTime);
+    @Query("DELETE FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base")
+    void deleteByBaseCurrency(@Param("base") String baseCurrency);
+
+    // delete by base and time
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base AND c.updateTime = :updateTime")
+    void deleteByBaseCurrencyAndUpdateTime(@Param("base") String baseCurrency, @Param("updateTime") LocalDateTime updateTime);
 
     @Modifying
     @Transactional

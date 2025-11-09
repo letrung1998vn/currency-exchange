@@ -24,11 +24,11 @@ public class CurrencySyncService {
     @Autowired
     private CurrencyService currencyService;
 
-    @Scheduled(cron = "0 30 1 * * *") // Runs every day at 00:30 (12:30 AM)
+    @Scheduled(cron = "0 30 17 * * *") // Runs every day at 00:30 (12:30 AM)
     public void synchCurrencyByDay() {
         String baseCurrency = "VND";
-        LocalDate startDate = LocalDateTime.now().toLocalDate().minusDays(2);
-        LocalDate endDate = LocalDateTime.now().toLocalDate().minusDays(1);
+        LocalDate startDate = LocalDateTime.now().toLocalDate().minusDays(1);
+        LocalDate endDate = LocalDateTime.now().toLocalDate();
 
         List<CurrencyExchangeRateDto> syncCurrencyRate = clientService.getCurrencyExchangeRates(baseCurrency,
                 startDate, endDate);
@@ -46,7 +46,7 @@ public class CurrencySyncService {
             Instant instant = Instant.parse(rateDto.getCloseTime());
 
             // DTO closeTime is a string (ISO); CurrencyService expects update_time as String
-            currencyService.addExchangeRate(rateDto.getBaseCurrency(), rateDto.getQuoteCurrency(),
+            currencyService.addExchangeRate(rateDto.getBaseCurrency(),
                     OUT_FMT.format(instant), rate);
         }
         baseCurrency = "EUR";
@@ -67,7 +67,7 @@ public class CurrencySyncService {
             Instant instant = Instant.parse(rateDto.getCloseTime());
 
             // DTO closeTime is a string (ISO); CurrencyService expects update_time as String
-            currencyService.addExchangeRate(rateDto.getBaseCurrency(), rateDto.getQuoteCurrency(),
+            currencyService.addExchangeRate(rateDto.getBaseCurrency(),
                     OUT_FMT.format(instant), rate);
         }
     }

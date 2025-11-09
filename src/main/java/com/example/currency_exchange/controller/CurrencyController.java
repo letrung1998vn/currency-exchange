@@ -28,20 +28,20 @@ public class CurrencyController {
     CurrencyClientService clientService;
 
     @PostMapping("/add-exchange-rate")
-    public void addExchangeRate(@RequestParam String baseCurrency, @RequestParam String quoteCurrency, @RequestParam @DateTimeFormat(
+    public void addExchangeRate(@RequestParam String baseCurrency, @RequestParam @DateTimeFormat(
             iso = DateTimeFormat.ISO.DATE_TIME) String update_time, @RequestBody RateDto rate) {
-        currencyService.addExchangeRate(baseCurrency, quoteCurrency, update_time, rate);
+        currencyService.addExchangeRate(baseCurrency, update_time, rate);
     }
 
     @GetMapping("/get-exchange-rate")
-    public List<CurrencyExchangeRate> exchangeRateList(@RequestParam String baseCurrency, @RequestParam String quoteCurrency) {
-        List<CurrencyExchangeRate> res = currencyService.getExchangeRate(baseCurrency, quoteCurrency);
+    public List<CurrencyExchangeRate> exchangeRateList(@RequestParam String baseCurrency) {
+        List<CurrencyExchangeRate> res = currencyService.getExchangeRate(baseCurrency);
         return res;
     }
 
     @GetMapping("/get-exchange-rate-at-time")
-    public List<CurrencyExchangeRate> exchangeRateListAtTime(@RequestParam String baseCurrency, @RequestParam String quoteCurrency, @RequestParam String time) {
-        List<CurrencyExchangeRate> res = currencyService.getExchangeRateAtTime(baseCurrency, quoteCurrency, time);
+    public List<CurrencyExchangeRate> exchangeRateListAtTime(@RequestParam String baseCurrency,@RequestParam String time) {
+        List<CurrencyExchangeRate> res = currencyService.getExchangeRateAtTime(baseCurrency, time);
         return res;
     }
 
@@ -52,17 +52,10 @@ public class CurrencyController {
 
     }
 
-    @GetMapping("/get-exchange-rate-by-quote-currency-code")
-    public List<CurrencyExchangeRate> exchangeRateListByQuoteCurrencyCode(@RequestParam String quoteCurrency, @RequestParam String time) {
-        List<CurrencyExchangeRate> res = currencyService.getExchangeRateByQuoteCurrencyCode(quoteCurrency, time);
-        return res;
-    }
-
     @PostMapping("/modify-exchange-rate")
-    public CurrencyExchangeRate modifyExchangeRate(@RequestParam String baseCurrency, @RequestParam String quoteCurrency, @RequestParam @DateTimeFormat(
+    public CurrencyExchangeRate modifyExchangeRate(@RequestParam String baseCurrency, @RequestParam @DateTimeFormat(
             iso = DateTimeFormat.ISO.DATE_TIME) String update_time, @RequestBody RateDto rate) {
-        CurrencyExchangeRate updated = currencyService.updateExchangeRate(baseCurrency, quoteCurrency, update_time,
-                rate);
+        CurrencyExchangeRate updated = currencyService.updateExchangeRate(baseCurrency, update_time, rate);
         return updated;
     }
 
@@ -78,24 +71,14 @@ public class CurrencyController {
     }
 
     @DeleteMapping("/delete-exchange-rate")
-    public void deleteExchangeRate(@RequestParam String baseCurrency, @RequestParam String quoteCurrency) {
-        currencyService.deleteExchangeRate(baseCurrency, quoteCurrency);
+    public void deleteExchangeRate(@RequestParam String baseCurrency) {
+        currencyService.deleteExchangeRate(baseCurrency);
     }
 
     @DeleteMapping("/delete-exchange-rate-at-time")
-    public void deleteExchangeRateAtTime(@RequestParam String baseCurrency, @RequestParam String quoteCurrency, @RequestParam @DateTimeFormat(
+    public void deleteExchangeRateAtTime(@RequestParam String baseCurrency, @RequestParam @DateTimeFormat(
             iso = DateTimeFormat.ISO.DATE_TIME) String update_time) {
-        currencyService.deleteExchangeRateAtTime(baseCurrency, quoteCurrency, update_time);
-    }
-
-    @DeleteMapping("/delete-exchange-rate-by-base-currency-code")
-    public void deleteExchangeRateByBaseCurrencyCode(@RequestParam String baseCurrency, @RequestParam String time) {
-        currencyService.deleteExchangeRateByBaseCurrencyCode(baseCurrency, time);
-    }
-
-    @DeleteMapping("/delete-exchange-rate-by-quote-currency-code")
-    public void deleteExchangeRateByQuoteCurrencyCode(@RequestParam String quoteCurrency, @RequestParam String time) {
-        currencyService.deleteExchangeRateByQuoteCurrencyCode(quoteCurrency, time);
+        currencyService.deleteExchangeRateAtTime(baseCurrency, update_time);
     }
 
 }
