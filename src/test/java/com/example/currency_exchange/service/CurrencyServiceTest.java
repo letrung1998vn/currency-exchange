@@ -61,12 +61,12 @@ class CurrencyServiceTest {
         assertThat(saved.getBaseCurrency()).isEqualTo("EUR");
         assertThat(saved.getQuoteCurrency()).isEqualTo("USD");
         assertThat(saved.getUpdateTime()).isEqualTo(LocalDateTime.parse("2023/01/01 10:15:30", FMT));
-        assertThat(saved.getHighBid()).isEqualTo(1.1f);
-        assertThat(saved.getLowBid()).isEqualTo(0.9f);
-        assertThat(saved.getHighAsk()).isEqualTo(1.2f);
-        assertThat(saved.getLowAsk()).isEqualTo(0.8f);
-        assertThat(saved.getAverageAsk()).isEqualTo(1.15f);
-        assertThat(saved.getAverageBid()).isEqualTo(0.95f);
+        assertThat(saved.getHighBid()).isEqualTo(new BigDecimal(1.1));
+        assertThat(saved.getLowBid()).isEqualTo(new BigDecimal(0.9));
+        assertThat(saved.getHighAsk()).isEqualTo(new BigDecimal(1.2));
+        assertThat(saved.getLowAsk()).isEqualTo(new BigDecimal(0.8));
+        assertThat(saved.getAverageAsk()).isEqualTo(new BigDecimal(1.15));
+        assertThat(saved.getAverageBid()).isEqualTo(new BigDecimal(0.95));
     }
 
     @Test
@@ -118,21 +118,21 @@ class CurrencyServiceTest {
         existing.setQuoteCurrency("Y");
         existing.setUpdateTime(LocalDateTime.parse("2023/01/01 00:00:00", FMT));
 
-        when(currencyRepos.findByBaseCurrencyAndUpdateTime("X",
+        when(currencyRepos.findByBaseCurrencyAndUpdateTime("EUR",
                 LocalDateTime.parse("2023/01/01 00:00:00", FMT)))
                 .thenReturn(existing);
         when(currencyRepos.save(existing)).thenReturn(existing);
 
-        var res = currencyService.updateExchangeRate("X", "2023/01/01 00:00:00", rate);
+        var res = currencyService.updateExchangeRate("EUR", "2023/01/01 00:00:00", rate);
 
-        assertThat(res.getHighBid()).isEqualTo(2.0f);
-        assertThat(res.getLowBid()).isEqualTo(1.0f);
-        assertThat(res.getHighAsk()).isEqualTo(2.2f);
-        assertThat(res.getLowAsk()).isEqualTo(0.8f);
-        assertThat(res.getAverageAsk()).isEqualTo(2.1f);
-        assertThat(res.getAverageBid()).isEqualTo(1.1f);
+        assertThat(res.getHighBid()).isEqualTo(new BigDecimal(2.0));
+        assertThat(res.getLowBid()).isEqualTo(new BigDecimal(1.0));
+        assertThat(res.getHighAsk()).isEqualTo(new BigDecimal(2.2));
+        assertThat(res.getLowAsk()).isEqualTo(new BigDecimal(0.8));
+        assertThat(res.getAverageAsk()).isEqualTo(new BigDecimal(2.1));
+        assertThat(res.getAverageBid()).isEqualTo(new BigDecimal(1.1));
 
-        verify(currencyRepos).findByBaseCurrencyAndUpdateTime("X",
+        verify(currencyRepos).findByBaseCurrencyAndUpdateTime("EUR",
                 LocalDateTime.parse("2023/01/01 00:00:00", FMT));
         verify(currencyRepos).save(existing);
     }
