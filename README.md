@@ -20,7 +20,7 @@
    5. Delete exchange rate: /currency/delete-exchange-rate
    6. Delete exchange rate at specific time: /currency/delete-exchange-rate-at-time
 2. Call API:
-   1. /currency/get-fxds-exchange-rate: get currency exchange from external API FXDS
+   1. /currency/call-fxds-exchange-rate: call external API FXDS
 3. Call API and convert the data to form a new API:
    1. /currency/get-fxds-exchange-rate: get currency exchange from external API FXDS
 4. All features must include unit tests.

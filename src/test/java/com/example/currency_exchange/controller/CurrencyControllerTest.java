@@ -13,12 +13,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.context.MessageSource;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.security.KeyPair;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,6 +34,9 @@ class CurrencyControllerTest {
 
     @Mock
     private CurrencyClientService clientService;
+
+    @Mock
+    private MessageSource messageSource;
 
     @InjectMocks
     private CurrencyController controller;
@@ -118,7 +123,7 @@ class CurrencyControllerTest {
     }
 
     @Test
-    void getFxdsexchangeRateList_delegatesToClientService() {
+    void getFxdsExchangeRateList_delegatesToClientService() {
         CurrencyExchangeRateDto dto = new CurrencyExchangeRateDto();
         dto.setBaseCurrency("USD");
         List<CurrencyExchangeRateDto> expected = Collections.singletonList(dto);
@@ -127,9 +132,12 @@ class CurrencyControllerTest {
         LocalDate startDate = updateTime.toLocalDate();
         LocalDate endDate = updateTime.toLocalDate().plusDays(1);
 
+        DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        String updateTimeStr = updateTime.format(FMT);
+
         when(clientService.getCurrencyExchangeRates("USD", startDate, endDate)).thenReturn(expected);
 
-        List<CurrencyExchangeRateDto> actual = controller.getFxdsexchangeRateList("USD", updateTime);
+        List<CurrencyExchangeRateDto> actual = controller.getFxdsExchangeRateList("USD", updateTimeStr);
 
         assertSame(expected, actual);
         verify(clientService, times(1)).getCurrencyExchangeRates("USD", startDate, endDate);
@@ -200,6 +208,36 @@ class CurrencyControllerTest {
 
         assertSame(expected, actual);
         verify(currencyService, times(1)).getExchangeRate("USD");
+    }
+
+    @Test
+    void addExchangeRate_invalidDate_throwsIllegalArgumentException() {
+        RateDto rate = new RateDto();
+        rate.setAverageBid(new BigDecimal("1.23"));
+
+        when(messageSource.getMessage(eq("wrongDateFormat"), any(), any())).thenReturn("bad format");
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> controller.addExchangeRate("EUR", "2025-11-01T00:00:00Z", rate));
+        assertEquals("bad format", ex.getMessage());
+    }
+
+    @Test
+    void getFxdsExchangeRateList_invalidDate_throwsIllegalArgumentException() {
+        when(messageSource.getMessage(eq("wrongDateFormat"), any(), any())).thenReturn("bad format");
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> controller.getFxdsExchangeRateList("USD", "2025-11-01T00:00:00Z"));
+        assertEquals("bad format", ex.getMessage());
+    }
+
+    @Test
+    void callFxdsExchangeRateList_invalidDate_throwsIllegalArgumentException() {
+        when(messageSource.getMessage(eq("wrongDateFormat"), any(), any())).thenReturn("bad format");
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> controller.callFxdsExchangeRateList("USD", "2025-11-01T00:00:00Z", "2025-11-02T00:00:00Z"));
+        assertEquals("bad format", ex.getMessage());
     }
 
 }
