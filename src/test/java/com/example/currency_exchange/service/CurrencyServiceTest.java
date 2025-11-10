@@ -1,6 +1,5 @@
 package com.example.currency_exchange.service;
 
-import com.example.currency_exchange.dto.CurrencyExchangeRateDto;
 import com.example.currency_exchange.dto.RateDto;
 import com.example.currency_exchange.entity.CurrencyExchangeRate;
 import com.example.currency_exchange.mapper.CurrencyMapper;
@@ -49,9 +48,9 @@ class CurrencyServiceTest {
         rate.setAverageBid(new BigDecimal("0.95"));
 
         // ensure getExchangeRateAtTime will return empty list to allow save path
-        when(currencyRepos.findByCurrencyCodeAndUpdateTimeOrderByCurrencyCode(anyString(),
+        when(currencyRepos.findByCurrencyCodeAndUpdateTime(anyString(),
                 any(LocalDateTime.class)))
-                .thenReturn(List.of());
+                .thenReturn(mock(CurrencyExchangeRate.class));
 
         currencyService.addExchangeRate("EUR", "2023/01/01 10:15:30", rate);
 
@@ -62,12 +61,12 @@ class CurrencyServiceTest {
         assertThat(saved.getBaseCurrency()).isEqualTo("EUR");
         assertThat(saved.getQuoteCurrency()).isEqualTo("USD");
         assertThat(saved.getUpdateTime()).isEqualTo(LocalDateTime.parse("2023/01/01 10:15:30", FMT));
-        assertThat(saved.getHighBid()).isEqualTo(new BigDecimal(1.1));
-        assertThat(saved.getLowBid()).isEqualTo(new BigDecimal(0.9));
-        assertThat(saved.getHighAsk()).isEqualTo(new BigDecimal(1.2));
-        assertThat(saved.getLowAsk()).isEqualTo(new BigDecimal(0.8));
-        assertThat(saved.getAverageAsk()).isEqualTo(new BigDecimal(1.15));
-        assertThat(saved.getAverageBid()).isEqualTo(new BigDecimal(0.95));
+        assertThat(saved.getHighBid()).isEqualTo(new BigDecimal("1.1"));
+        assertThat(saved.getLowBid()).isEqualTo(new BigDecimal("0.9"));
+        assertThat(saved.getHighAsk()).isEqualTo(new BigDecimal("1.2"));
+        assertThat(saved.getLowAsk()).isEqualTo(new BigDecimal("0.8"));
+        assertThat(saved.getAverageAsk()).isEqualTo(new BigDecimal("1.15"));
+        assertThat(saved.getAverageBid()).isEqualTo(new BigDecimal("0.95"));
     }
 
     @Test
@@ -81,32 +80,18 @@ class CurrencyServiceTest {
     }
 
     @Test
-    void getExchangeRateAtTime_delegatesToRepo() {
-        // use a valid LocalDateTime string and mock the JPQL-based repository method
-        String timeStr = "2023/01/01 00:00:00";
-        when(currencyRepos.findByCurrencyCodeAndUpdateTimeOrderByCurrencyCode("EUR",
-                LocalDateTime.parse(timeStr, FMT)))
-                .thenReturn(List.of(new CurrencyExchangeRate()));
-
-        currencyService.getExchangeRateAtTime("EUR", timeStr);
-
-        verify(currencyRepos).findByCurrencyCodeAndUpdateTimeOrderByCurrencyCode("EUR",
-                LocalDateTime.parse(timeStr, FMT));
-    }
-
-    @Test
     void updateExchangeRate_updatesAndSaves() {
         RateDto rate = new RateDto();
-        rate.setHighBid(new BigDecimal(2.0));
-        rate.setLowBid(new BigDecimal(1.0));
-        rate.setHighAsk(new BigDecimal(2.2));
-        rate.setLowAsk(new BigDecimal(0.8));
-        rate.setAverageAsk(new BigDecimal(2.1));
-        rate.setAverageBid(new BigDecimal(1.1));
+        rate.setHighBid(new BigDecimal("2.0"));
+        rate.setLowBid(new BigDecimal("1.0"));
+        rate.setHighAsk(new BigDecimal("2.2"));
+        rate.setLowAsk(new BigDecimal("0.8"));
+        rate.setAverageAsk(new BigDecimal("2.1"));
+        rate.setAverageBid(new BigDecimal("1.1"));
 
         CurrencyExchangeRate existing = new CurrencyExchangeRate();
-        existing.setBaseCurrency("X");
-        existing.setQuoteCurrency("Y");
+        existing.setBaseCurrency("EUR");
+        existing.setQuoteCurrency("USD");
         existing.setUpdateTime(LocalDateTime.parse("2023/01/01 00:00:00", FMT));
 
         when(currencyRepos.findByCurrencyCodeAndUpdateTime("EUR",
@@ -114,14 +99,14 @@ class CurrencyServiceTest {
                 .thenReturn(existing);
         when(currencyRepos.save(existing)).thenReturn(existing);
 
-        var res = currencyService.updateExchangeRate("EUR", "2023/01/01 00:00:00", rate);
+        CurrencyExchangeRate res = currencyService.updateExchangeRate("EUR", "2023/01/01 00:00:00", rate);
 
-        assertThat(res.getHighBid()).isEqualTo(new BigDecimal(2.0));
-        assertThat(res.getLowBid()).isEqualTo(new BigDecimal(1.0));
-        assertThat(res.getHighAsk()).isEqualTo(new BigDecimal(2.2));
-        assertThat(res.getLowAsk()).isEqualTo(new BigDecimal(0.8));
-        assertThat(res.getAverageAsk()).isEqualTo(new BigDecimal(2.1));
-        assertThat(res.getAverageBid()).isEqualTo(new BigDecimal(1.1));
+        assertThat(res.getHighBid()).isEqualTo(new BigDecimal("2.0"));
+        assertThat(res.getLowBid()).isEqualTo(new BigDecimal("1.0"));
+        assertThat(res.getHighAsk()).isEqualTo(new BigDecimal("2.2"));
+        assertThat(res.getLowAsk()).isEqualTo(new BigDecimal("0.8"));
+        assertThat(res.getAverageAsk()).isEqualTo(new BigDecimal("2.1"));
+        assertThat(res.getAverageBid()).isEqualTo(new BigDecimal("1.1"));
 
         verify(currencyRepos).findByCurrencyCodeAndUpdateTime("EUR",
                 LocalDateTime.parse("2023/01/01 00:00:00", FMT));

@@ -17,9 +17,6 @@ public interface CurrencyRepos extends JpaRepository<CurrencyExchangeRate, Long>
     @Query("SELECT c FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base ORDER BY c.baseCurrency")
     List<CurrencyExchangeRate> findByCurrencyCode(@Param("base") String baseCurrency);
 
-    @Query("SELECT c FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base AND c.updateTime = :updateTime ORDER BY c.baseCurrency")
-    List<CurrencyExchangeRate> findByCurrencyCodeAndUpdateTimeOrderByCurrencyCode(@Param("base") String baseCurrency, @Param("updateTime") LocalDateTime updateTime);
-
     @Query("SELECT c FROM CurrencyExchangeRate c WHERE c.baseCurrency = :base AND c.updateTime = :updateTime")
     CurrencyExchangeRate findByCurrencyCodeAndUpdateTime(@Param("base") String baseCurrency, @Param("updateTime") LocalDateTime updateTime);
 

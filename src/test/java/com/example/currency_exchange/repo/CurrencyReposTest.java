@@ -48,20 +48,6 @@ class CurrencyReposTest {
     }
 
     @Test
-    void findByCurrencyAdnUpdateTimeOrderbyCurrencyCodeAndUpdateTimeVariants() {
-        LocalDateTime t = LocalDateTime.of(2025, 11, 11, 0, 0);
-        CurrencyExchangeRate a = create("JPY", "USD", t, 0.009f);
-        repo.save(a);
-
-        List<CurrencyExchangeRate> list = repo.findByCurrencyCodeAndUpdateTimeOrderByCurrencyCode("JPY", t);
-        assertThat(list).isNotEmpty().hasSize(1);
-
-        CurrencyExchangeRate single = repo.findByCurrencyCodeAndUpdateTime("JPY", t);
-        assertThat(single).isNotNull();
-        assertThat(single.getBaseCurrency()).isEqualTo("JPY");
-    }
-
-    @Test
     void deleteByBaseCurrencyRemovesAllWithThatBase() {
         LocalDateTime now = LocalDateTime.now();
         repo.save(create("AUD", "USD", now, 0.7f));
