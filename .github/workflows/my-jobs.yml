@@ -73,7 +73,6 @@ jobs:
         with:
           host: ${{ secrets.REMOTE_HOST }}
           username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             docker pull currency-exchange:latest
             docker stop currency-exchange-app || true  
