@@ -1,5 +1,6 @@
 package com.example.currency_exchange.service;
 
+import com.example.currency_exchange.dto.CurrencyExchangeRateDto;
 import com.example.currency_exchange.dto.RateDto;
 import com.example.currency_exchange.entity.CurrencyExchangeRate;
 import com.example.currency_exchange.mapper.CurrencyMapper;
@@ -40,15 +41,15 @@ class CurrencyServiceTest {
     @Test
     void addExchangeRate_savesEntityWithValues() {
         RateDto rate = new RateDto();
-        rate.setHighBid(new BigDecimal(1.1));
-        rate.setLowBid(new BigDecimal(0.9));
-        rate.setHighAsk(new BigDecimal(1.2));
-        rate.setLowAsk(new BigDecimal(0.8));
-        rate.setAverageAsk(new BigDecimal(1.15));
-        rate.setAverageBid(new BigDecimal(0.95));
+        rate.setHighBid(new BigDecimal("1.1"));
+        rate.setLowBid(new BigDecimal("0.9"));
+        rate.setHighAsk(new BigDecimal("1.2"));
+        rate.setLowAsk(new BigDecimal("0.8"));
+        rate.setAverageAsk(new BigDecimal("1.15"));
+        rate.setAverageBid(new BigDecimal("0.95"));
 
         // ensure getExchangeRateAtTime will return empty list to allow save path
-        when(currencyRepos.findByBaseCurrencyAndUpdateTimeOrderByBaseCurrency(anyString(),
+        when(currencyRepos.findByCurrencyCodeAndUpdateTimeOrderByCurrencyCode(anyString(),
                 any(LocalDateTime.class)))
                 .thenReturn(List.of());
 
@@ -71,36 +72,26 @@ class CurrencyServiceTest {
 
     @Test
     void getExchangeRate_delegatesToRepo() {
-        when(currencyRepos.findByBaseCurrencyOrderByBaseCurrency("A"))
+        when(currencyRepos.findByCurrencyCode("A"))
                 .thenReturn(List.of(new CurrencyExchangeRate()));
 
         var res = currencyService.getExchangeRate("A");
         assertThat(res).hasSize(1);
-        verify(currencyRepos).findByBaseCurrencyOrderByBaseCurrency("A");
+        verify(currencyRepos).findByCurrencyCode("A");
     }
 
     @Test
     void getExchangeRateAtTime_delegatesToRepo() {
         // use a valid LocalDateTime string and mock the JPQL-based repository method
         String timeStr = "2023/01/01 00:00:00";
-        when(currencyRepos.findByBaseCurrencyAndUpdateTimeOrderByBaseCurrency("EUR",
+        when(currencyRepos.findByCurrencyCodeAndUpdateTimeOrderByCurrencyCode("EUR",
                 LocalDateTime.parse(timeStr, FMT)))
                 .thenReturn(List.of(new CurrencyExchangeRate()));
 
-        var res = currencyService.getExchangeRateAtTime("EUR", timeStr);
-        assertThat(res).hasSize(1);
-        verify(currencyRepos).findByBaseCurrencyAndUpdateTimeOrderByBaseCurrency("EUR",
-                LocalDateTime.parse(timeStr, FMT));
-    }
+        currencyService.getExchangeRateAtTime("EUR", timeStr);
 
-    @Test
-    void getExchangeRateByBaseCurrencyCode_delegatesToRepo() {
-        String timeStr = "2023/01/01 00:00:00";
-        when(currencyRepos.findByBaseCurrency("EUR", LocalDateTime.parse(timeStr, FMT))).thenReturn(
-                List.of(new CurrencyExchangeRate()));
-        var res = currencyService.getExchangeRateByBaseCurrencyCode("EUR", timeStr);
-        assertThat(res).hasSize(1);
-        verify(currencyRepos).findByBaseCurrency("EUR", LocalDateTime.parse(timeStr, FMT));
+        verify(currencyRepos).findByCurrencyCodeAndUpdateTimeOrderByCurrencyCode("EUR",
+                LocalDateTime.parse(timeStr, FMT));
     }
 
     @Test
@@ -118,7 +109,7 @@ class CurrencyServiceTest {
         existing.setQuoteCurrency("Y");
         existing.setUpdateTime(LocalDateTime.parse("2023/01/01 00:00:00", FMT));
 
-        when(currencyRepos.findByBaseCurrencyAndUpdateTime("EUR",
+        when(currencyRepos.findByCurrencyCodeAndUpdateTime("EUR",
                 LocalDateTime.parse("2023/01/01 00:00:00", FMT)))
                 .thenReturn(existing);
         when(currencyRepos.save(existing)).thenReturn(existing);
@@ -132,7 +123,7 @@ class CurrencyServiceTest {
         assertThat(res.getAverageAsk()).isEqualTo(new BigDecimal(2.1));
         assertThat(res.getAverageBid()).isEqualTo(new BigDecimal(1.1));
 
-        verify(currencyRepos).findByBaseCurrencyAndUpdateTime("EUR",
+        verify(currencyRepos).findByCurrencyCodeAndUpdateTime("EUR",
                 LocalDateTime.parse("2023/01/01 00:00:00", FMT));
         verify(currencyRepos).save(existing);
     }

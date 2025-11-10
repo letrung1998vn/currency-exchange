@@ -1,5 +1,6 @@
 package com.example.currency_exchange.config;
 
+import com.example.currency_exchange.interceptor.LoggingClientHttpRequestInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;

@@ -47,7 +47,7 @@ class CurrencyControllerTest {
     }
 
     @Test
-    void addExchangeRate_delegatesToService() {
+    void addExchangeRateSuccess() {
         RateDto rate = new RateDto();
         rate.setAverageBid(new BigDecimal("1.23"));
 
@@ -57,7 +57,7 @@ class CurrencyControllerTest {
     }
 
     @Test
-    void getExchangeRateList_returnsServiceResult() {
+    void getExchangeRateListSuccess_returnsServiceResult() {
         CurrencyExchangeRateDto e = new CurrencyExchangeRateDto();
         e.setBaseCurrency("EUR");
         e.setQuoteCurrency("USD");
@@ -72,40 +72,23 @@ class CurrencyControllerTest {
     }
 
     @Test
-    void getGetExchangeRateListAtTime_returnsServiceResult() {
-        CurrencyExchangeRateDto e = new CurrencyExchangeRateDto();
-        e.setBaseCurrency("EUR");
-        e.setQuoteCurrency("USD");
-        List<CurrencyExchangeRateDto> expected = Collections.singletonList(e);
+    void getGetExchangeRateAtTimeSuccess_returnsServiceResult() {
+        CurrencyExchangeRateDto expected = new CurrencyExchangeRateDto();
+        expected.setBaseCurrency("EUR");
+        expected.setQuoteCurrency("USD");
 
         when(currencyService.getExchangeRateAtTime("EUR", "2025/11/01 00:00:00")).thenReturn(expected);
 
-        List<CurrencyExchangeRateDto> actual = controller.getExchangeRateListAtTime("EUR", "2025/11/01 00:00:00");
+        CurrencyExchangeRateDto actual = controller.getExchangeRateAtTime("EUR", "2025/11/01 00:00:00");
 
-        assertEquals(1, actual.size());
         // expected baseCurrency is EUR and quoteCurrency is USD as set above
-        assertEquals("EUR", actual.getFirst().getBaseCurrency());
-        assertEquals("USD", actual.getFirst().getQuoteCurrency());
+        assertEquals("EUR", actual.getBaseCurrency());
+        assertEquals("USD", actual.getQuoteCurrency());
         verify(currencyService, times(1)).getExchangeRateAtTime("EUR", "2025/11/01 00:00:00");
     }
 
     @Test
-    void getGetExchangeRateListByBaseCurrencyCode_returnsServiceResult() {
-        CurrencyExchangeRateDto e = new CurrencyExchangeRateDto();
-        e.setBaseCurrency("USD");
-        List<CurrencyExchangeRateDto> expected = Collections.singletonList(e);
-
-        when(currencyService.getExchangeRateByBaseCurrencyCode("USD", "2025/11/01 00:00:00")).thenReturn(expected);
-
-        List<CurrencyExchangeRateDto> actual = controller.getExchangeRateListByBaseCurrencyCode("USD", "2025/11/01 00:00:00");
-
-        assertFalse(actual.isEmpty());
-        assertEquals("USD", actual.getFirst().getBaseCurrency());
-        verify(currencyService, times(1)).getExchangeRateByBaseCurrencyCode("USD", "2025/11/01 00:00:00");
-    }
-
-    @Test
-    void modifyExchangeRate_returnsUpdatedEntity() {
+    void modifyExchangeRateSuccess_returnsUpdatedEntity() {
         RateDto rate = new RateDto();
         rate.setAverageBid(new BigDecimal("2.5"));
         CurrencyExchangeRate updated = new CurrencyExchangeRate();
@@ -123,7 +106,7 @@ class CurrencyControllerTest {
     }
 
     @Test
-    void getFxdsExchangeRateList_delegatesToClientService() {
+    void getFxdsExchangeRateListSuccess() {
         CurrencyExchangeRateDto dto = new CurrencyExchangeRateDto();
         dto.setBaseCurrency("USD");
         List<CurrencyExchangeRateDto> expected = Collections.singletonList(dto);
@@ -144,7 +127,7 @@ class CurrencyControllerTest {
     }
 
     @Test
-    void deleteExchangeRate_callsService() {
+    void deleteExchangeRateSuccess() {
         doNothing().when(currencyService).deleteExchangeRate("EUR");
 
         controller.deleteExchangeRate("EUR");
@@ -153,7 +136,7 @@ class CurrencyControllerTest {
     }
 
     @Test
-    void deleteExchangeRateAtTime_callsService() {
+    void deleteExchangeRateAtTimeSuccess() {
         doNothing().when(currencyService).deleteExchangeRateAtTime("EUR", "2025/11/01 00:00:00");
 
         controller.deleteExchangeRateAtTime("EUR", "2025/11/01 00:00:00");
@@ -162,7 +145,7 @@ class CurrencyControllerTest {
     }
 
     @Test
-    void rsaGenerate_returnsPublicKey() {
+    void rsaGenerateSuccess_returnsPublicKey() {
         PublicKeyResponse resp = controller.rsaGenerate();
 
         assertNotNull(resp);
@@ -171,7 +154,7 @@ class CurrencyControllerTest {
     }
 
     @Test
-    void getExchangeRateListWithEncryptCurrencyCode_encryptsAndCanBeDecrypted() {
+    void getExchangeRateListWithEncryptCurrencyCodeSuccess() {
         KeyPair kp = RSAUtil.generateKeyPair(2048);
         String publicKeyBase64 = RSAUtil.publicKeyToBase64(kp.getPublic());
 

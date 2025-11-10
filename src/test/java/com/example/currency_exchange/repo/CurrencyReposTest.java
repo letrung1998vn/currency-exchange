@@ -34,61 +34,62 @@ class CurrencyReposTest {
     }
 
     @Test
-    void save_and_findByBaseAndQuoteOrderByBaseCurrency() {
-        LocalDateTime t = LocalDateTime.now().withNano(0);
-        CurrencyExchangeRate a = repo.save(create("USD", "EUR", t, 1.0f));
-        CurrencyExchangeRate b = repo.save(create("USD", "EUR", t.plusDays(1), 1.1f));
+    void saveAndFindByCurrencyCodeAndUpdateTimeOrderbyCurrencyCodeOrder() {
+        LocalDateTime now = LocalDateTime.now();
+        CurrencyExchangeRate a = create("USD", "EUR", now, 1.1f);
+        CurrencyExchangeRate b = create("USD", "GBP", now.plusMinutes(1), 1.2f);
 
-        List<CurrencyExchangeRate> list = repo.findByBaseCurrencyAndQuoteCurrencyOrderByBaseCurrency("USD", "EUR");
-        assertThat(list).isNotEmpty();
-        assertThat(list).extracting(CurrencyExchangeRate::getBaseCurrency).allMatch(s -> s.equals("USD"));
+        repo.save(a);
+        repo.save(b);
+
+        List<CurrencyExchangeRate> list = repo.findByCurrencyCode("USD");
+        assertThat(list).isNotEmpty().hasSize(2);
+        assertThat(list).allMatch(e -> "USD".equals(e.getBaseCurrency()));
     }
 
     @Test
-    void findByBaseCurrencyAndUpdateTime_and_findByBaseCurrency() {
-        LocalDateTime t = LocalDateTime.now().withNano(0);
-        CurrencyExchangeRate saved = repo.save(create("GBP", "USD", t, 1.5f));
+    void findByCurrencyAdnUpdateTimeOrderbyCurrencyCodeAndUpdateTimeVariants() {
+        LocalDateTime t = LocalDateTime.of(2025, 11, 11, 0, 0);
+        CurrencyExchangeRate a = create("JPY", "USD", t, 0.009f);
+        repo.save(a);
 
-        CurrencyExchangeRate one = repo.findByBaseCurrencyAndQuoteCurrencyAndUpdateTime("GBP", "USD", t);
-        assertThat(one).isNotNull();
-        assertThat(one.getId()).isEqualTo(saved.getId());
+        List<CurrencyExchangeRate> list = repo.findByCurrencyCodeAndUpdateTimeOrderByCurrencyCode("JPY", t);
+        assertThat(list).isNotEmpty().hasSize(1);
 
-        List<CurrencyExchangeRate> byBaseAndTime = repo.findByBaseCurrency("GBP", t);
-        assertThat(byBaseAndTime).hasSizeGreaterThanOrEqualTo(1);
+        CurrencyExchangeRate single = repo.findByCurrencyCodeAndUpdateTime("JPY", t);
+        assertThat(single).isNotNull();
+        assertThat(single.getBaseCurrency()).isEqualTo("JPY");
     }
 
     @Test
-    void findByQuoteCurrency() {
-        LocalDateTime t = LocalDateTime.now().withNano(0);
-        repo.save(create("AUD", "JPY", t, 0.7f));
+    void deleteByBaseCurrencyRemovesAllWithThatBase() {
+        LocalDateTime now = LocalDateTime.now();
+        repo.save(create("AUD", "USD", now, 0.7f));
+        repo.save(create("AUD", "EUR", now.plusHours(1), 0.71f));
 
-        List<CurrencyExchangeRate> byQuote = repo.findByQuoteCurrency("JPY", t);
-        assertThat(byQuote).isNotEmpty();
-        assertThat(byQuote.get(0).getQuoteCurrency()).isEqualTo("JPY");
+        List<CurrencyExchangeRate> before = repo.findByCurrencyCode("AUD");
+        assertThat(before).hasSize(2);
+
+        repo.deleteByBaseCurrency("AUD");
+
+        List<CurrencyExchangeRate> after = repo.findByCurrencyCode("AUD");
+        assertThat(after).isEmpty();
     }
 
     @Test
-    void findByBaseCurrencyAndQuoteCurrencyAndUpdateTimeOrderByBaseCurrency() {
-        LocalDateTime t = LocalDateTime.now().withNano(0);
-        repo.save(create("CAD", "CHF", t, 0.9f));
+    void deleteByBaseCurrencyAndUpdateTimeRemovesOnlyMatching() {
+        LocalDateTime t1 = LocalDateTime.of(2025, 11, 10, 10, 0);
+        LocalDateTime t2 = LocalDateTime.of(2025, 11, 10, 11, 0);
+        repo.save(create("CAD", "USD", t1, 0.8f));
+        repo.save(create("CAD", "EUR", t2, 0.81f));
 
-        List<CurrencyExchangeRate> res = repo.findByBaseCurrencyAndQuoteCurrencyAndUpdateTimeOrderByBaseCurrency("CAD",
-                "CHF", t);
-        assertThat(res).isNotEmpty();
-    }
+        List<CurrencyExchangeRate> before = repo.findByCurrencyCode("CAD");
+        assertThat(before).hasSize(2);
 
-    @Test
-    void delete_methods_work() {
-        LocalDateTime t = LocalDateTime.now().withNano(0);
-        CurrencyExchangeRate e1 = repo.save(create("DEL", "X1", t, 1.0f));
-        CurrencyExchangeRate e2 = repo.save(create("DEL", "X2", t.plusMinutes(1), 1.1f));
+        repo.deleteByBaseCurrencyAndUpdateTime("CAD", t1);
 
-        repo.deleteByBaseCurrencyAndQuoteCurrency("DEL", "X1");
-        assertThat(repo.findByBaseCurrencyAndQuoteCurrencyAndUpdateTime("DEL", "X1", t)).isNull();
-
-        CurrencyExchangeRate e3 = repo.save(create("BAS", "Q", t, 2.0f));
-        repo.deleteByBaseCurrencyAndUpdateTime("BAS", t);
-        assertThat(repo.findByBaseCurrency("BAS", t)).isEmpty();
-
+        List<CurrencyExchangeRate> after = repo.findByCurrencyCode("CAD");
+        assertThat(after).hasSize(1);
+        assertThat(after.get(0).getUpdateTime()).isEqualTo(t2);
     }
 }

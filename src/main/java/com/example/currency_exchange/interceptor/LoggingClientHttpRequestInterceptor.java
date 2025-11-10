@@ -1,4 +1,4 @@
-package com.example.currency_exchange.config;
+package com.example.currency_exchange.interceptor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

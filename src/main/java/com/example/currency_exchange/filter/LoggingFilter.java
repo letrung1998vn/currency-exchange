@@ -1,4 +1,4 @@
-package com.example.currency_exchange.config;
+package com.example.currency_exchange.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

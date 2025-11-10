@@ -48,20 +48,11 @@ public class CurrencyController {
     }
 
     @GetMapping("/get-exchange-rate-at-time")
-    public List<CurrencyExchangeRateDto> getExchangeRateListAtTime(@RequestParam String baseCurrency, @RequestParam String time) {
+    public CurrencyExchangeRateDto getExchangeRateAtTime(@RequestParam String baseCurrency, @RequestParam String time) {
         if (!CheckDateUtil.isValid(time)) {
             throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, null));
         }
         return currencyService.getExchangeRateAtTime(baseCurrency, time);
-    }
-
-    @GetMapping("/get-exchange-rate-by-base-currency-code")
-    public List<CurrencyExchangeRateDto> getExchangeRateListByBaseCurrencyCode(@RequestParam String baseCurrency, @RequestParam String time) {
-        if (!CheckDateUtil.isValid(time)) {
-            throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, null));
-        }
-        return currencyService.getExchangeRateByBaseCurrencyCode(baseCurrency, time);
-
     }
 
     @PostMapping("/modify-exchange-rate")

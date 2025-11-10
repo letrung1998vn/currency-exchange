@@ -10,7 +10,7 @@
 9. /rsa/encrypt: encrypt plain text by public key 
 10. /currency/get-exchange-rate-with-encrypt-currency-code: get currency exchange by encrypted currency code
 
-# Must item include:
+# Must item included:
 
 1. Currency DB maintenance function:
    1. Add exchange rate: /currency/add-exchange-rate
