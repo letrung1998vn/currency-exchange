@@ -1,0 +1,2 @@
+CREATE INDEX idx_currency_exchange_rate_base_currency ON currency_exchange_rate (base_currency);
+CREATE INDEX idx_currency_exchange_rate_base_update_time ON currency_exchange_rate (base_currency, update_time);

@@ -8,5 +8,6 @@ CREATE TABLE currency_exchange_rate (
     high_bid DECIMAL(20,10),
     high_ask DECIMAL(20,10),
     low_bid DECIMAL(20,10),
-    low_ask DECIMAL(20,10)
+    low_ask DECIMAL(20,10),
+    UNIQUE (base_currency, quote_currency, update_time)
 );
