@@ -9,7 +9,7 @@ COPY src ./src
 RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/* \
     && mvn -B clean package -DskipTests
 # Stage 2: Create the final image
-FROM eclipse-temurin:25-jre-jammy
+FROM eclipse-temurin:17-jdk-jammy
 
 WORKDIR /app
 
