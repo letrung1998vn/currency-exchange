@@ -7,6 +7,7 @@ import com.example.currency_exchange.mapper.CurrencyMapper;
 import com.example.currency_exchange.repo.CurrencyRepos;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,19 +26,6 @@ public class CurrencyService {
     @Autowired
     CurrencyMapper mapper;
 
-    public void addExchangeRate(String baseCurrency, String update_time, RateDto rate) {
-        CurrencyExchangeRateDto existingRates = getExchangeRateAtTime(
-                baseCurrency, update_time);
-        if (existingRates != null) {
-            throw new UnsupportedOperationException(
-                    messageSource.getMessage("insertMutlipleError", null, null));
-        }
-
-        CurrencyExchangeRate rateEntity = getCurrencyExchangeRate(baseCurrency,
-                update_time, rate);
-        currencyRepos.save(rateEntity);
-    }
-
     private static CurrencyExchangeRate getCurrencyExchangeRate(String baseCurrency, String update_time, RateDto rate) {
         CurrencyExchangeRate rateEntity = new CurrencyExchangeRate();
         rateEntity.setBaseCurrency(baseCurrency);
@@ -50,6 +38,19 @@ public class CurrencyService {
         rateEntity.setAverageAsk(rate.getAverageAsk());
         rateEntity.setAverageBid(rate.getAverageBid());
         return rateEntity;
+    }
+
+    public void addExchangeRate(String baseCurrency, String update_time, RateDto rate) {
+        CurrencyExchangeRateDto existingRates = getExchangeRateAtTime(
+                baseCurrency, update_time);
+        if (existingRates != null) {
+            throw new UnsupportedOperationException(
+                    messageSource.getMessage("insertMutlipleError", null, LocaleContextHolder.getLocale()));
+        }
+
+        CurrencyExchangeRate rateEntity = getCurrencyExchangeRate(baseCurrency,
+                update_time, rate);
+        currencyRepos.save(rateEntity);
     }
 
     public List<CurrencyExchangeRateDto> getExchangeRate(String baseCurrency) {

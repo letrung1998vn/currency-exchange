@@ -9,15 +9,19 @@ import com.example.currency_exchange.service.CurrencyClientService;
 import com.example.currency_exchange.service.CurrencyService;
 import com.example.currency_exchange.util.CheckDateUtil;
 import com.example.currency_exchange.util.RSAUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.LocaleResolver;
 
 import java.security.KeyPair;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("currency")
@@ -31,6 +35,9 @@ public class CurrencyController {
 
     @Autowired
     MessageSource messageSource;
+
+    @Autowired
+    LocaleResolver localeResolver;
 
     private volatile String lastPrivateKeyBase64;
 
@@ -113,6 +120,12 @@ public class CurrencyController {
         KeyPair kp = RSAUtil.generateKeyPair(2048);
         lastPrivateKeyBase64 = RSAUtil.privateKeyToBase64(kp.getPrivate());
         return new PublicKeyResponse(RSAUtil.publicKeyToBase64(kp.getPublic()));
+    }
+
+    @PostMapping("/change-locale")
+    public void changeLocale(@RequestParam String lang, HttpServletRequest request, HttpServletResponse response) {
+        Locale loc = Locale.forLanguageTag(lang);
+        localeResolver.setLocale(request, response, loc);
     }
 
 }

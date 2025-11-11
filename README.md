@@ -33,7 +33,8 @@ The following was discovered as part of building this project:
 
 1. Print out the request and response body log of all API be called and call out external APIs.
 2. swagger-ui: url swagger: /swagger-ui
-3. i18n design
+3. i18n design:
+   * For change language, please call api /currency/change-language?lang={lang}, lang support: en, vi
 4. Implementation of more than 2 design patterns: Builder, Adapter, Interceptor
 5. Able to run on Docker
 6. Error handling to decorate all API responses
