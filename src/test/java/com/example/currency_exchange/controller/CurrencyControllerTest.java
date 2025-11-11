@@ -8,12 +8,16 @@ import com.example.currency_exchange.entity.CurrencyExchangeRate;
 import com.example.currency_exchange.service.CurrencyClientService;
 import com.example.currency_exchange.service.CurrencyService;
 import com.example.currency_exchange.util.RSAUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.context.MessageSource;
+import org.springframework.web.servlet.LocaleResolver;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -23,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -37,6 +42,15 @@ class CurrencyControllerTest {
 
     @Mock
     private MessageSource messageSource;
+
+    @Mock
+    private LocaleResolver localeResolver;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @Mock
+    private HttpServletResponse response;
 
     @InjectMocks
     private CurrencyController controller;
@@ -268,6 +282,30 @@ class CurrencyControllerTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> controller.modifyExchangeRate("EUR", "2025-11-06T23:59:59Z", rate));
         assertEquals("bad", ex.getMessage());
+    }
+
+    @Test
+    void changeLocale_callsLocaleResolver_withLanguageTag_vi() {
+        String lang = "vi";
+
+        controller.changeLocale(lang, request, response);
+
+        ArgumentCaptor<Locale> captor = ArgumentCaptor.forClass(Locale.class);
+        verify(localeResolver, times(1)).setLocale(eq(request), eq(response), captor.capture());
+        Locale passed = captor.getValue();
+        assertEquals(Locale.forLanguageTag("vi"), passed);
+    }
+
+    @Test
+    void changeLocale_callsLocaleResolver_withLanguageTag_enUS() {
+        String lang = "en-US";
+
+        controller.changeLocale(lang, request, response);
+
+        ArgumentCaptor<Locale> captor = ArgumentCaptor.forClass(Locale.class);
+        verify(localeResolver, times(1)).setLocale(eq(request), eq(response), captor.capture());
+        Locale passed = captor.getValue();
+        assertEquals(Locale.forLanguageTag("en-US"), passed);
     }
 
 }
