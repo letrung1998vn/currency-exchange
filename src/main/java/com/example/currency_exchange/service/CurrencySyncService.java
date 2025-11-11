@@ -23,8 +23,8 @@ public class CurrencySyncService {
     @Autowired
     private CurrencyService currencyService;
 
-    @Scheduled(cron = "0 30 17 * * *") // Runs every day at 00:30 (12:30 AM)
-    public void synchCurrencyByDay() {
+    @Scheduled(cron = "0 30 17 * * *")
+    public void syncCurrencyByDay() {
         String baseCurrency = "VND";
         LocalDate startDate = LocalDateTime.now().toLocalDate().minusDays(1);
         LocalDate endDate = LocalDateTime.now().toLocalDate();

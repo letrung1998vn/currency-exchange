@@ -25,14 +25,13 @@
    1. /currency/get-fxds-exchange-rate: get currency exchange from external API FXDS
 4. All features must include unit tests.
 5. Schedule synchronization of exchange rates:
-    1. A scheduled task that runs every day at 17h30 GMT+07 to synchronize exchange rates from the external API FXDS and update into database accordingly(currently only update 2 currency VND and EUR).
+   1. A scheduled task that runs every day at 17h30 GMT+07 to synchronize exchange rates from the external API FXDS and update into database accordingly(currently only update 2 currency VND and EUR).
    2. The scheduled is CurrencySyncService
 
 # New Item included
 The following was discovered as part of building this project:
 
-1. Print out the request and response body log of all API be called and call out
-     external APIs.
+1. Print out the request and response body log of all API be called and call out external APIs.
 2. swagger-ui: url swagger: /swagger-ui
 3. i18n design
 4. Implementation of more than 2 design patterns: Builder, Adapter, Interceptor

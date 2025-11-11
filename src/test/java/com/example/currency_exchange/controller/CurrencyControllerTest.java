@@ -167,18 +167,15 @@ class CurrencyControllerTest {
     }
 
     @Test
-    void rsaDecrypt_callsServiceWithDecryptedCurrencyCode() throws Exception {
-        // prepare key pair and set controller's private key
+    void rsaDecryptSuccess() throws Exception {
         KeyPair kp = RSAUtil.generateKeyPair(2048);
         String publicKeyBase64 = RSAUtil.publicKeyToBase64(kp.getPublic());
         String privateBase64 = RSAUtil.privateKeyToBase64(kp.getPrivate());
 
-        // set private field lastPrivateKeyBase64 via reflection
         Field f = CurrencyController.class.getDeclaredField("lastPrivateKeyBase64");
         f.setAccessible(true);
         f.set(controller, privateBase64);
 
-        // encrypt a currency code with the public key
         String cipher = RSAUtil.encrypt("USD", RSAUtil.publicKeyFromBase64(publicKeyBase64));
 
         CurrencyExchangeRateDto dto = new CurrencyExchangeRateDto();
@@ -194,33 +191,83 @@ class CurrencyControllerTest {
     }
 
     @Test
-    void addExchangeRate_invalidDate_throwsIllegalArgumentException() {
-        RateDto rate = new RateDto();
-        rate.setAverageBid(new BigDecimal("1.23"));
-
-        when(messageSource.getMessage(eq("wrongDateFormat"), any(), any())).thenReturn("bad format");
+    void addExchangeRate_invalidTime_throws() {
+        RateDto rate = RateDto.builder().averageAsk(BigDecimal.ONE).averageBid(BigDecimal.ONE).build();
+        String badTime = "2025-11-06T23:59:59Z"; // controller expects yyyy/MM/dd HH:mm:ss
+        when(messageSource.getMessage(eq("wrongDateFormat"), any(), any())).thenReturn("wrong format");
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> controller.addExchangeRate("EUR", "2025-11-01T00:00:00Z", rate));
-        assertEquals("bad format", ex.getMessage());
+                () -> controller.addExchangeRate("EUR", badTime, rate));
+        assertEquals("wrong format", ex.getMessage());
+        verify(currencyService, never()).addExchangeRate(anyString(), anyString(), any());
     }
 
     @Test
-    void getFxdsExchangeRateList_invalidDate_throwsIllegalArgumentException() {
-        when(messageSource.getMessage(eq("wrongDateFormat"), any(), any())).thenReturn("bad format");
-
+    void getExchangeRateAtTime_invalidTime_throws() {
+        when(messageSource.getMessage(eq("wrongDateFormat"), any(), any())).thenReturn("bad time");
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> controller.getFxdsExchangeRateList("USD", "2025-11-01T00:00:00Z"));
-        assertEquals("bad format", ex.getMessage());
+                () -> controller.getExchangeRateAtTime("EUR", "2025-11-06T23:59:59Z"));
+        assertEquals("bad time", ex.getMessage());
+        verify(currencyService, never()).getExchangeRateAtTime(anyString(), anyString());
     }
 
     @Test
-    void callFxdsExchangeRateList_invalidDate_throwsIllegalArgumentException() {
-        when(messageSource.getMessage(eq("wrongDateFormat"), any(), any())).thenReturn("bad format");
-
+    void getFxdsExchangeRateList_invalidTime_throws() {
+        when(messageSource.getMessage(eq("wrongDateFormat"), any(), any())).thenReturn("bad");
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> controller.callFxdsExchangeRateList("USD", "2025-11-01T00:00:00Z", "2025-11-02T00:00:00Z"));
-        assertEquals("bad format", ex.getMessage());
+                () -> controller.getFxdsExchangeRateList("EUR", "2025-11-06T23:59:59Z"));
+        assertEquals("bad", ex.getMessage());
+    }
+
+    @Test
+    void callFxdsExchangeRateList_invalidTime_throws() {
+        when(messageSource.getMessage(eq("wrongDateFormat"), any(), any())).thenReturn("bad");
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> controller.callFxdsExchangeRateList("EUR", "2025-11-06T23:59:59Z", "2025-11-07T23:59:59Z"));
+        assertEquals("bad", ex.getMessage());
+    }
+
+    @Test
+    void getFxdsExchangeRateListSuccessWithValidTime() {
+        String valid = "2025/11/06 00:00:00";
+        DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDate start = LocalDate.parse(valid, FMT);
+        LocalDate end = start.plusDays(1);
+
+        CurrencyExchangeRateDto dto = CurrencyExchangeRateDto.builder().baseCurrency("EUR").quoteCurrency("USD").build();
+        when(clientService.getCurrencyExchangeRates(eq("EUR"), eq(start), eq(end))).thenReturn(List.of(dto));
+
+        List<CurrencyExchangeRateDto> result = controller.getFxdsExchangeRateList("EUR", valid);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("EUR", result.get(0).getBaseCurrency());
+        verify(clientService).getCurrencyExchangeRates(eq("EUR"), eq(start), eq(end));
+    }
+
+    @Test
+    void callFxdsExchangeRateListSuccessWithValidTime() {
+        String start = "2025/11/06 00:00:00";
+        String end = "2025/11/07 00:00:00";
+        DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDate s = LocalDate.parse(start, FMT);
+        LocalDate e = LocalDate.parse(end, FMT);
+
+        CurrencyExchangeRateDto dto = CurrencyExchangeRateDto.builder().baseCurrency("EUR").quoteCurrency("USD").build();
+        when(clientService.getCurrencyExchangeRates(eq("EUR"), eq(s), eq(e))).thenReturn(List.of(dto));
+
+        List<CurrencyExchangeRateDto> result = controller.callFxdsExchangeRateList("EUR", start, end);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(clientService).getCurrencyExchangeRates(eq("EUR"), eq(s), eq(e));
+    }
+
+    @Test
+    void modifyExchangeRate_invalidTime_throws() {
+        RateDto rate = RateDto.builder().averageAsk(BigDecimal.ONE).averageBid(BigDecimal.ONE).build();
+        when(messageSource.getMessage(eq("wrongDateFormat"), any(), any())).thenReturn("bad");
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> controller.modifyExchangeRate("EUR", "2025-11-06T23:59:59Z", rate));
+        assertEquals("bad", ex.getMessage());
     }
 
 }

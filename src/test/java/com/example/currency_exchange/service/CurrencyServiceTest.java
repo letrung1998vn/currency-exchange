@@ -1,129 +1,183 @@
 package com.example.currency_exchange.service;
 
+import com.example.currency_exchange.dto.CurrencyExchangeRateDto;
 import com.example.currency_exchange.dto.RateDto;
 import com.example.currency_exchange.entity.CurrencyExchangeRate;
 import com.example.currency_exchange.mapper.CurrencyMapper;
 import com.example.currency_exchange.repo.CurrencyRepos;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class CurrencyServiceTest {
 
-    DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+    private static final String TIME = "2025/01/02 03:04:05";
+
+    @Mock
+    CurrencyRepos currencyRepos;
+    @Mock
+    MessageSource messageSource;
     @Mock
     CurrencyMapper mapper;
-    @Mock
-    private CurrencyRepos currencyRepos;
-    @Mock
-    private MessageSource messageSource;
+
     @InjectMocks
-    private CurrencyService currencyService;
+    CurrencyService currencyService;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    void setup() {
+        lenient().when(messageSource.getMessage(anyString(), any(), any())).thenAnswer(inv -> inv.getArgument(0));
     }
 
     @Test
-    void addExchangeRate_savesEntityWithValues() {
-        RateDto rate = new RateDto();
-        rate.setHighBid(new BigDecimal("1.1"));
-        rate.setLowBid(new BigDecimal("0.9"));
-        rate.setHighAsk(new BigDecimal("1.2"));
-        rate.setLowAsk(new BigDecimal("0.8"));
-        rate.setAverageAsk(new BigDecimal("1.15"));
-        rate.setAverageBid(new BigDecimal("0.95"));
+    void addExchangeRate_whenNoExisting_shouldSaveEntity() {
+        when(mapper.toDto(any())).thenReturn(null);
 
-        // ensure getExchangeRateAtTime will return empty list to allow save path
-        when(currencyRepos.findByCurrencyCodeAndUpdateTime(anyString(),
-                any(LocalDateTime.class)))
-                .thenReturn(mock(CurrencyExchangeRate.class));
+        RateDto rate = mock(RateDto.class);
+        when(rate.getHighBid()).thenReturn(BigDecimal.valueOf(1.1));
+        when(rate.getLowBid()).thenReturn(BigDecimal.valueOf(1.0));
+        when(rate.getHighAsk()).thenReturn(BigDecimal.valueOf(1.2));
+        when(rate.getLowAsk()).thenReturn(BigDecimal.valueOf(0.9));
+        when(rate.getAverageAsk()).thenReturn(BigDecimal.valueOf(1.15));
+        when(rate.getAverageBid()).thenReturn(BigDecimal.valueOf(1.05));
 
-        currencyService.addExchangeRate("EUR", "2023/01/01 10:15:30", rate);
+        currencyService.addExchangeRate("EUR", TIME, rate);
 
         ArgumentCaptor<CurrencyExchangeRate> captor = ArgumentCaptor.forClass(CurrencyExchangeRate.class);
         verify(currencyRepos, times(1)).save(captor.capture());
-
         CurrencyExchangeRate saved = captor.getValue();
-        assertThat(saved.getBaseCurrency()).isEqualTo("EUR");
-        assertThat(saved.getQuoteCurrency()).isEqualTo("USD");
-        assertThat(saved.getUpdateTime()).isEqualTo(LocalDateTime.parse("2023/01/01 10:15:30", FMT));
-        assertThat(saved.getHighBid()).isEqualTo(new BigDecimal("1.1"));
-        assertThat(saved.getLowBid()).isEqualTo(new BigDecimal("0.9"));
-        assertThat(saved.getHighAsk()).isEqualTo(new BigDecimal("1.2"));
-        assertThat(saved.getLowAsk()).isEqualTo(new BigDecimal("0.8"));
-        assertThat(saved.getAverageAsk()).isEqualTo(new BigDecimal("1.15"));
-        assertThat(saved.getAverageBid()).isEqualTo(new BigDecimal("0.95"));
+        assertEquals("EUR", saved.getBaseCurrency());
+        assertEquals("USD", saved.getQuoteCurrency());
+        assertEquals(LocalDateTime.parse(TIME, FMT), saved.getUpdateTime());
+        assertEquals(BigDecimal.valueOf(1.1), saved.getHighBid());
+        assertEquals(BigDecimal.valueOf(1.0), saved.getLowBid());
+        assertEquals(BigDecimal.valueOf(1.2), saved.getHighAsk());
+        assertEquals(BigDecimal.valueOf(0.9), saved.getLowAsk());
+        assertEquals(BigDecimal.valueOf(1.15), saved.getAverageAsk());
+        assertEquals(BigDecimal.valueOf(1.05), saved.getAverageBid());
     }
 
     @Test
-    void getExchangeRate_delegatesToRepo() {
-        when(currencyRepos.findByCurrencyCode("A"))
-                .thenReturn(List.of(new CurrencyExchangeRate()));
+    void addExchangeRate_whenExisting_shouldThrow() {
+        when(mapper.toDto(any())).thenReturn(new CurrencyExchangeRateDto());
+        when(messageSource.getMessage(eq("insertMutlipleError"), any(), any())).thenReturn("err");
 
-        var res = currencyService.getExchangeRate("A");
-        assertThat(res).hasSize(1);
-        verify(currencyRepos).findByCurrencyCode("A");
+        RateDto rate = mock(RateDto.class);
+
+        UnsupportedOperationException ex = assertThrows(UnsupportedOperationException.class,
+                () -> currencyService.addExchangeRate("EUR", TIME, rate));
+        assertEquals("err", ex.getMessage());
+        verify(currencyRepos, never()).save(any());
     }
 
     @Test
-    void updateExchangeRate_updatesAndSaves() {
-        RateDto rate = new RateDto();
-        rate.setHighBid(new BigDecimal("2.0"));
-        rate.setLowBid(new BigDecimal("1.0"));
-        rate.setHighAsk(new BigDecimal("2.2"));
-        rate.setLowAsk(new BigDecimal("0.8"));
-        rate.setAverageAsk(new BigDecimal("2.1"));
-        rate.setAverageBid(new BigDecimal("1.1"));
+    void getExchangeRate_whenFound_returnsMappedList() {
+        CurrencyExchangeRate entity = new CurrencyExchangeRate();
+        List<CurrencyExchangeRate> repoList = List.of(entity);
+        when(currencyRepos.findByCurrencyCode("EUR")).thenReturn(repoList);
 
-        CurrencyExchangeRate existing = new CurrencyExchangeRate();
-        existing.setBaseCurrency("EUR");
-        existing.setQuoteCurrency("USD");
-        existing.setUpdateTime(LocalDateTime.parse("2023/01/01 00:00:00", FMT));
+        CurrencyExchangeRateDto dto = new CurrencyExchangeRateDto();
+        when(mapper.toDto(entity)).thenReturn(dto);
 
-        when(currencyRepos.findByCurrencyCodeAndUpdateTime("EUR",
-                LocalDateTime.parse("2023/01/01 00:00:00", FMT)))
-                .thenReturn(existing);
-        when(currencyRepos.save(existing)).thenReturn(existing);
-
-        CurrencyExchangeRate res = currencyService.updateExchangeRate("EUR", "2023/01/01 00:00:00", rate);
-
-        assertThat(res.getHighBid()).isEqualTo(new BigDecimal("2.0"));
-        assertThat(res.getLowBid()).isEqualTo(new BigDecimal("1.0"));
-        assertThat(res.getHighAsk()).isEqualTo(new BigDecimal("2.2"));
-        assertThat(res.getLowAsk()).isEqualTo(new BigDecimal("0.8"));
-        assertThat(res.getAverageAsk()).isEqualTo(new BigDecimal("2.1"));
-        assertThat(res.getAverageBid()).isEqualTo(new BigDecimal("1.1"));
-
-        verify(currencyRepos).findByCurrencyCodeAndUpdateTime("EUR",
-                LocalDateTime.parse("2023/01/01 00:00:00", FMT));
-        verify(currencyRepos).save(existing);
+        List<CurrencyExchangeRateDto> result = currencyService.getExchangeRate("EUR");
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertSame(dto, result.get(0));
     }
 
-    // Delete method tests
     @Test
-    void deleteExchangeRate_delegatesToRepo() {
+    void getExchangeRate_whenNotFound_throws() {
+        when(currencyRepos.findByCurrencyCode("EUR")).thenReturn(Collections.emptyList());
+        when(messageSource.getMessage(eq("currencyCodeNotFound"), any(), any())).thenReturn("not found");
+
+        UnsupportedOperationException ex = assertThrows(UnsupportedOperationException.class,
+                () -> currencyService.getExchangeRate("EUR"));
+        assertEquals("not found", ex.getMessage());
+    }
+
+    @Test
+    void getExchangeRateAtTime_whenEntityPresent_returnsDto() {
+        CurrencyExchangeRate entity = new CurrencyExchangeRate();
+        when(currencyRepos.findByCurrencyCodeAndUpdateTime(eq("EUR"), any(LocalDateTime.class))).thenReturn(entity);
+
+        CurrencyExchangeRateDto dto = new CurrencyExchangeRateDto();
+        when(mapper.toDto(entity)).thenReturn(dto);
+
+        CurrencyExchangeRateDto result = currencyService.getExchangeRateAtTime("EUR", TIME);
+        assertSame(dto, result);
+    }
+
+    @Test
+    void getExchangeRateAtTime_whenEntityNull_mapperCalledWithNull_returnsNull() {
+        when(currencyRepos.findByCurrencyCodeAndUpdateTime(eq("EUR"), any(LocalDateTime.class))).thenReturn(null);
+        when(mapper.toDto(null)).thenReturn(null);
+
+        CurrencyExchangeRateDto result = currencyService.getExchangeRateAtTime("EUR", TIME);
+        assertNull(result);
+    }
+
+    @Test
+    void updateExchangeRate_whenFound_updatesAndSaves() {
+        CurrencyExchangeRate entity = new CurrencyExchangeRate();
+        when(currencyRepos.findByCurrencyCodeAndUpdateTime(eq("EUR"), any(LocalDateTime.class))).thenReturn(entity);
+
+        RateDto rate = mock(RateDto.class);
+        when(rate.getHighBid()).thenReturn(BigDecimal.valueOf(2.1));
+        when(rate.getLowBid()).thenReturn(BigDecimal.valueOf(2.0));
+        when(rate.getHighAsk()).thenReturn(BigDecimal.valueOf(2.2));
+        when(rate.getLowAsk()).thenReturn(BigDecimal.valueOf(1.9));
+        when(rate.getAverageAsk()).thenReturn(BigDecimal.valueOf(2.15));
+        when(rate.getAverageBid()).thenReturn(BigDecimal.valueOf(2.05));
+
+        CurrencyExchangeRate saved = new CurrencyExchangeRate();
+        when(currencyRepos.save(entity)).thenReturn(saved);
+
+        CurrencyExchangeRate result = currencyService.updateExchangeRate("EUR", TIME, rate);
+        assertSame(saved, result);
+        verify(currencyRepos).save(entity);
+        assertEquals(BigDecimal.valueOf(2.1), entity.getHighBid());
+        assertEquals(BigDecimal.valueOf(2.0), entity.getLowBid());
+    }
+
+    @Test
+    void updateExchangeRate_whenNotFound_throws() {
+        when(currencyRepos.findByCurrencyCodeAndUpdateTime(eq("EUR"), any(LocalDateTime.class))).thenReturn(null);
+        when(messageSource.getMessage(eq("updateCurrencyExchangeNotFound"), any(), any())).thenReturn("missing");
+        RateDto rate = mock(RateDto.class);
+
+        UnsupportedOperationException ex = assertThrows(UnsupportedOperationException.class,
+                () -> currencyService.updateExchangeRate("EUR", TIME, rate));
+        assertEquals("missing", ex.getMessage());
+        verify(currencyRepos, never()).save(any());
+    }
+
+    @Test
+    void deleteExchangeRate_callsRepo() {
         currencyService.deleteExchangeRate("EUR");
         verify(currencyRepos).deleteByBaseCurrency("EUR");
     }
 
     @Test
-    void deleteExchangeRateAtTime_delegatesToRepo() {
-        currencyService.deleteExchangeRateAtTime("EUR", "2023/01/02 12:00:00");
-        verify(currencyRepos).deleteByBaseCurrencyAndUpdateTime("EUR",
-                LocalDateTime.parse("2023/01/02 12:00:00", FMT));
+    void deleteExchangeRateAtTime_callsRepoWithParsedTime() {
+        currencyService.deleteExchangeRateAtTime("EUR", TIME);
+        ArgumentCaptor<LocalDateTime> captor = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(currencyRepos).deleteByBaseCurrencyAndUpdateTime(eq("EUR"), captor.capture());
+        assertEquals(LocalDateTime.parse(TIME, FMT), captor.getValue());
     }
 }

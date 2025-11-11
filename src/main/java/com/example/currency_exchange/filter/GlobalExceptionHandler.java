@@ -1,4 +1,4 @@
-package com.example.currency_exchange.controller;
+package com.example.currency_exchange.filter;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
