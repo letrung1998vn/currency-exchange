@@ -58,7 +58,7 @@ public class CurrencyService {
                 baseCurrency);
         if (result == null || result.isEmpty()) {
             throw new UnsupportedOperationException(
-                    messageSource.getMessage("currencyCodeNotFound", null, null));
+                    messageSource.getMessage("currencyCodeNotFound", null, LocaleContextHolder.getLocale()));
         }
         List<CurrencyExchangeRateDto> currencyExchangeRateDtos = new ArrayList<>();
         for (CurrencyExchangeRate exchangeRate : result) {
@@ -78,7 +78,7 @@ public class CurrencyService {
                 LocalDateTime.parse(update_time, FMT));
         if (rateEntity == null) {
             throw new UnsupportedOperationException(
-                    messageSource.getMessage("updateCurrencyExchangeNotFound", null, null));
+                    messageSource.getMessage("updateCurrencyExchangeNotFound", null, LocaleContextHolder.getLocale()));
         }
         rateEntity.setHighBid(rate.getHighBid());
         rateEntity.setLowBid(rate.getLowBid());

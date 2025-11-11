@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.LocaleResolver;
@@ -44,7 +45,7 @@ public class CurrencyController {
     @PostMapping("/add-exchange-rate")
     public void addExchangeRate(@RequestParam String baseCurrency, @RequestParam String update_time, @RequestBody RateDto rate) {
         if (!CheckDateUtil.isValid(update_time)) {
-            throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, null));
+            throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, LocaleContextHolder.getLocale()));
         }
         currencyService.addExchangeRate(baseCurrency, update_time, rate);
     }
@@ -57,7 +58,7 @@ public class CurrencyController {
     @GetMapping("/get-exchange-rate-at-time")
     public CurrencyExchangeRateDto getExchangeRateAtTime(@RequestParam String baseCurrency, @RequestParam String time) {
         if (!CheckDateUtil.isValid(time)) {
-            throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, null));
+            throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, LocaleContextHolder.getLocale()));
         }
         return currencyService.getExchangeRateAtTime(baseCurrency, time);
     }
@@ -65,7 +66,7 @@ public class CurrencyController {
     @PostMapping("/modify-exchange-rate")
     public CurrencyExchangeRate modifyExchangeRate(@RequestParam String baseCurrency, @RequestParam String update_time, @RequestBody RateDto rate) {
         if (!CheckDateUtil.isValid(update_time)) {
-            throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, null));
+            throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, LocaleContextHolder.getLocale()));
         }
         return currencyService.updateExchangeRate(baseCurrency, update_time, rate);
     }
@@ -73,7 +74,7 @@ public class CurrencyController {
     @GetMapping(value = "/get-fxds-exchange-rate", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<CurrencyExchangeRateDto> getFxdsExchangeRateList(@RequestParam String baseCurrency, @RequestParam String updateTime) {
         if (!CheckDateUtil.isValid(updateTime)) {
-            throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, null));
+            throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, LocaleContextHolder.getLocale()));
         }
         DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDate startDate = LocalDate.parse(updateTime, FMT);
@@ -86,7 +87,7 @@ public class CurrencyController {
     @GetMapping(value = "/call-fxds-exchange-rate", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<CurrencyExchangeRateDto> callFxdsExchangeRateList(@RequestParam String baseCurrency, @RequestParam String startDate, String endDate) {
         if (!CheckDateUtil.isValid(startDate) || !CheckDateUtil.isValid(endDate)) {
-            throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, null));
+            throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, LocaleContextHolder.getLocale()));
         }
         DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDate start = LocalDate.parse(startDate, FMT);
