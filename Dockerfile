@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM eclipse-temurin:25-jdk-jammy as builder
+FROM eclipse-temurin:17-jdk-jammy as builder
 
 WORKDIR /app
 
