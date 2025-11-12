@@ -43,36 +43,36 @@ public class CurrencyController {
     private volatile String lastPrivateKeyBase64;
 
     @PostMapping("/add-exchange-rate")
-    public void addExchangeRate(@RequestParam String baseCurrency, @RequestParam String update_time, @RequestBody RateDto rate) {
+    public void addExchangeRate(@RequestParam String currencyCode, @RequestParam String update_time, @RequestBody RateDto rate) {
         if (!CheckDateUtil.isValid(update_time)) {
             throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, LocaleContextHolder.getLocale()));
         }
-        currencyService.addExchangeRate(baseCurrency, update_time, rate);
+        currencyService.addExchangeRate(currencyCode, update_time, rate);
     }
 
     @GetMapping("/get-exchange-rate")
-    public List<CurrencyExchangeRateDto> getExchangeRateList(@RequestParam String baseCurrency) {
-        return currencyService.getExchangeRate(baseCurrency);
+    public List<CurrencyExchangeRateDto> getExchangeRateList(@RequestParam String currencyCode) {
+        return currencyService.getExchangeRate(currencyCode);
     }
 
     @GetMapping("/get-exchange-rate-at-time")
-    public CurrencyExchangeRateDto getExchangeRateAtTime(@RequestParam String baseCurrency, @RequestParam String time) {
+    public CurrencyExchangeRateDto getExchangeRateAtTime(@RequestParam String currencyCode, @RequestParam String time) {
         if (!CheckDateUtil.isValid(time)) {
             throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, LocaleContextHolder.getLocale()));
         }
-        return currencyService.getExchangeRateAtTime(baseCurrency, time);
+        return currencyService.getExchangeRateAtTime(currencyCode, time);
     }
 
     @PostMapping("/modify-exchange-rate")
-    public CurrencyExchangeRate modifyExchangeRate(@RequestParam String baseCurrency, @RequestParam String update_time, @RequestBody RateDto rate) {
+    public CurrencyExchangeRate modifyExchangeRate(@RequestParam String currencyCode, @RequestParam String update_time, @RequestBody RateDto rate) {
         if (!CheckDateUtil.isValid(update_time)) {
             throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, LocaleContextHolder.getLocale()));
         }
-        return currencyService.updateExchangeRate(baseCurrency, update_time, rate);
+        return currencyService.updateExchangeRate(currencyCode, update_time, rate);
     }
 
     @GetMapping(value = "/get-fxds-exchange-rate", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<CurrencyExchangeRateDto> getFxdsExchangeRateList(@RequestParam String baseCurrency, @RequestParam String updateTime) {
+    public List<CurrencyExchangeRateDto> getFxdsExchangeRateList(@RequestParam String currencyCode, @RequestParam String updateTime) {
         if (!CheckDateUtil.isValid(updateTime)) {
             throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, LocaleContextHolder.getLocale()));
         }
@@ -80,29 +80,29 @@ public class CurrencyController {
         LocalDate startDate = LocalDate.parse(updateTime, FMT);
         LocalDate endDate = LocalDate.parse(updateTime, FMT).plusDays(1);
 
-        return clientService.getCurrencyExchangeRates(baseCurrency, startDate, endDate);
+        return clientService.getCurrencyExchangeRates(currencyCode, startDate, endDate);
 
     }
 
     @GetMapping(value = "/call-fxds-exchange-rate", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<CurrencyExchangeRateDto> callFxdsExchangeRateList(@RequestParam String baseCurrency, @RequestParam String startDate, String endDate) {
+    public List<CurrencyExchangeRateDto> callFxdsExchangeRateList(@RequestParam String currencyCode, @RequestParam String startDate, String endDate) {
         if (!CheckDateUtil.isValid(startDate) || !CheckDateUtil.isValid(endDate)) {
             throw new IllegalArgumentException(messageSource.getMessage("wrongDateFormat", null, LocaleContextHolder.getLocale()));
         }
         DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDate start = LocalDate.parse(startDate, FMT);
         LocalDate end = LocalDate.parse(endDate, FMT);
-        return clientService.getCurrencyExchangeRates(baseCurrency, start, end);
+        return clientService.getCurrencyExchangeRates(currencyCode, start, end);
     }
 
     @DeleteMapping("/delete-exchange-rate")
-    public void deleteExchangeRate(@RequestParam String baseCurrency) {
-        currencyService.deleteExchangeRate(baseCurrency);
+    public void deleteExchangeRate(@RequestParam String currencyCode) {
+        currencyService.deleteExchangeRate(currencyCode);
     }
 
     @DeleteMapping("/delete-exchange-rate-at-time")
-    public void deleteExchangeRateAtTime(@RequestParam String baseCurrency, @RequestParam String update_time) {
-        currencyService.deleteExchangeRateAtTime(baseCurrency, update_time);
+    public void deleteExchangeRateAtTime(@RequestParam String currencyCode, @RequestParam String update_time) {
+        currencyService.deleteExchangeRateAtTime(currencyCode, update_time);
     }
 
     @GetMapping("/rsa/encrypt")
